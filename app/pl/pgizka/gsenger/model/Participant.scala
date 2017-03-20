@@ -10,7 +10,7 @@ case class Participant(
   created: Option[Instant],
   modified: Option[Instant],
 
-  user: Long,
-  conversation: Long,
-  lastViewedMessage: Long,
-  messageViewedDate: Long) extends Entity[ParticipantId]
+  user: UserId,
+  chat: ChatId,
+  lastViewedMessage: Option[MessageId],
+  messageViewedMessageDate: Option[Long]) extends Entity[ParticipantId]

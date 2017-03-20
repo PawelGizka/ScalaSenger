@@ -12,7 +12,7 @@ import scala.collection.mutable.Map
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait ContactsRepository {this: UserRepository with DeviceRepository with Profile =>
+trait ContactRepository {this: UserRepository with DeviceRepository with Profile =>
 
   import profile.api._
 

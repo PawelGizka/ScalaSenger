@@ -5,7 +5,7 @@ import java.time.Instant
 import slick.lifted.MappedTo
 
 /**
-  * Typesafe IDs are enforced in our application.
+  * Typesafe IDs
   */
 abstract class EntityId(value: Long) extends MappedTo[Long] {
   override def toString = value.toString

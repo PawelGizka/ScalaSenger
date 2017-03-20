@@ -10,6 +10,7 @@ case class Message(
   created: Option[Instant],
   modified: Option[Instant],
 
-  conversationId: Long,
-  sender: Long,
-  number: Long) extends Entity[MessageId]
+  chat: ChatId,
+  sender: UserId,
+  number: Long,
+  text: String) extends Entity[MessageId]
