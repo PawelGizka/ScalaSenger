@@ -13,7 +13,8 @@ trait DAL extends UserRepository
 
   import profile.api._
 
-  val schema = users.schema ++ devices.schema ++ tokens.schema ++ contacts.schema
+  val schema = users.schema ++ devices.schema ++ participants.schema ++ tokens.schema ++
+    contacts.schema ++ chats.schema ++ messages.schema
 
   def create() = schema.create
 

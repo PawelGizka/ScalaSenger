@@ -10,20 +10,14 @@ import org.scalatest.{BeforeAndAfter, FunSpec, ShouldMatchers, TestData}
 import org.scalatestplus.play.PlaySpec
 import pl.pgizka.gsenger.persistance.H2DBConnector
 import pl.pgizka.gsenger.persistance.impl.UserRepository
+
 import scala.Utils._
+import scala.data.{RepositorySpec, TestEntity, TestEntityId}
 
-import scala.data.{TestEntity, TestEntityId}
 
-
-class UserRepositorySpec extends PlaySpec with BeforeAndAfter
-  with ScalaFutures with H2DBConnector with UserRepository {
-
-  implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
+class UserRepositorySpec extends RepositorySpec {
   import scala.concurrent.ExecutionContext.Implicits.global
-
   import profile.api._
-  val time = LocalDateTime.of(2014, 2, 26, 9, 30)
-  val inst = time.toInstant(ZoneOffset.UTC)
 
   val testData = List(
     testUser(1),

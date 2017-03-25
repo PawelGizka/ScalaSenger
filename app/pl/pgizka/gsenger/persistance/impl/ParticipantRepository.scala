@@ -2,6 +2,7 @@ package pl.pgizka.gsenger.persistance.impl
 
 import java.time.Instant
 
+import pl.pgizka.gsenger.core.CreateChatRequest
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
 import slick.profile.SqlProfile.ColumnOption.Nullable
@@ -18,11 +19,11 @@ trait ParticipantRepository extends EntityRepository {this: ChatRepository with 
 
     def userId = column[UserId]("user_id")
     def chatId = column[ChatId]("chat_id")
-    def lastViewedMessageId = column[MessageId]("last_viewed_message_id")
-    def lastViewedMessageDate = column[Long]("last_viewed_message_date")
+    def lastViewedMessageId = column[MessageId]("last_viewed_message_id", Nullable)
+    def lastViewedMessageDate = column[Long]("last_viewed_message_date", Nullable)
 
-    def chat = foreignKey("chat_id_fk", chatId, chats)(_.id)
-    def sender = foreignKey("sender_id_fk", userId, users)(_.id)
+    def chat = foreignKey("participant_chat_id_fk", chatId, chats)(_.id)
+    def user = foreignKey("user_id_fk", userId, users)(_.id)
     def lastViewedMessage = foreignKey("last_viewed_message_fk", lastViewedMessageId, messages)(_.id)
 
     def * = (id.?, version.?, created.?, modified.?, userId, chatId, lastViewedMessageId.?, lastViewedMessageDate.?) <> (Participant.tupled, Participant.unapply)
@@ -32,6 +33,11 @@ trait ParticipantRepository extends EntityRepository {this: ChatRepository with 
 
     override def copyEntityFields(entity: Participant, id: Option[ParticipantId], version: Option[Version], created: Option[Instant], modified: Option[Instant]): Participant =
       entity.copy(id = id, version = version, created = created, modified = modified)
+
+    def insertFromCreateChatRequest(createChatRequest: CreateChatRequest, chat: Chat, user: User): DBIO[Seq[Participant]] = {
+      val participantsIds = (createChatRequest.participants :+ user.idValue).distinct
+      insert(participantsIds.map(participantId => new Participant(chat, UserId(participantId))))
+    }
   }
 
 }

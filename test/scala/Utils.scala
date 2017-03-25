@@ -16,4 +16,8 @@ object Utils {
   def testDevice(id: Long, owner: User) = Device(Some(DeviceId(id)), Some(Version(0)),
     Some(inst), Some(inst), "device id " + id, None, Some((id * 100).toInt), "gcm token " + id, owner.id.get)
 
+  def testChat(id: Long) = Chat(Some(ChatId(id)), None, None, None, ChatType.groupChat, None, inst)
+
+  def testParticipant(userId: UserId, chatId: ChatId) = Participant(None, None, None, None, userId, chatId, None, None)
+
 }

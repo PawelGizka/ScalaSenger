@@ -10,17 +10,13 @@ import org.scalatestplus.play.PlaySpec
 import pl.pgizka.gsenger.model.{User, UserId, Version}
 import pl.pgizka.gsenger.persistance.H2DBConnector
 import pl.pgizka.gsenger.persistance.impl.DAL
+
 import scala.Utils._
+import scala.data.RepositorySpec
 
-class TokenRepositorySpec extends PlaySpec with BeforeAndAfter with ScalaFutures with MockitoSugar
-  with H2DBConnector with DAL {
-
-  implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
+class TokenRepositorySpec extends RepositorySpec {
   import scala.concurrent.ExecutionContext.Implicits.global
-
   import profile.api._
-  val time = LocalDateTime.of(2014, 2, 26, 9, 30)
-  val inst = time.toInstant(ZoneOffset.UTC)
 
   val user1 = testUser(1)
 

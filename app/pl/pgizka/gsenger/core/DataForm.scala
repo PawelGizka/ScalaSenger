@@ -45,3 +45,23 @@ case class GetFriendsResponse(friends: Seq[Friend])
 object GetFriendsResponse {
   implicit val getFriendsResponseFormat = Json.format[GetFriendsResponse]
 }
+
+case class CreateChatRequest(chatType: String, name: Option[String], participants: Seq[Long])
+
+object CreateChatRequest {
+  implicit val createChatRequestFormat = Json.format[CreateChatRequest]
+}
+
+case class CreateChatResponse(chatId: Long)
+
+object CreateChatResponse {
+  implicit val createChatResponseFormat = Json.format[CreateChatResponse]
+}
+
+
+
+
+
+
+
+

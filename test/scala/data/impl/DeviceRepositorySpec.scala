@@ -10,25 +10,19 @@ import org.scalatest.time.{Seconds, Span}
 import org.scalatestplus.play.PlaySpec
 import pl.pgizka.gsenger.persistance.H2DBConnector
 import pl.pgizka.gsenger.persistance.impl.{DeviceRepository, UserRepository}
+
 import scala.Utils._
+import scala.data.RepositorySpec
 
-class DeviceRepositorySpec extends PlaySpec with BeforeAndAfter
-  with ScalaFutures with H2DBConnector with UserRepository with DeviceRepository {
-
-  implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
+class DeviceRepositorySpec extends RepositorySpec {
   import scala.concurrent.ExecutionContext.Implicits.global
-
   import profile.api._
-  val time = LocalDateTime.of(2014, 2, 26, 9, 30)
-  val inst = time.toInstant(ZoneOffset.UTC)
 
   val user1 = testUser(1)
 
   val user2 = testUser(2)
 
   val device = testDevice(1, user1)
-
-  val schema = users.schema ++ devices.schema
 
   before {
     db.run(DBIO.seq(

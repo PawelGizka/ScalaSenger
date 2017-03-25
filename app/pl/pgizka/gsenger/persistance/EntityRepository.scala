@@ -56,6 +56,8 @@ trait EntityRepository { this: Profile =>
 
     def find(id: I): DBIO[Option[E]] = (for (e <- tableQuery if e.id === id) yield e).result.headOption
 
+    def find(ids: Seq[I]): DBIO[Seq[E]] = (for (e <- tableQuery if e.id inSetBind ids) yield e).result
+
     def findByIds(ids: Seq[I]): DBIO[Seq[E]] = tableQuery.filter(_.id inSetBind ids).result
 
     def count(): DBIO[Int] = (for (e <- tableQuery) yield e).length.result
@@ -71,6 +73,18 @@ trait EntityRepository { this: Profile =>
       (tableQuery returning tableQuery.map(_.id) into {
         case(t, id) => copyEntityFields(t, Some(id), t.version, t.created, t.modified)
       }) += newCopy
+    }
+
+    /**
+      * Insert the given sequence of entities and return a copy of that entities with IDs, versions, createds and modifieds fields populated.
+      */
+    def insert(e: Seq[E]): DBIO[Seq[E]] = {
+
+      val now = Instant.now()
+      val newCopies = e.map(e => copyEntityFields(e, None, Some(Version(0)), Some(now), Some(now)))
+      (tableQuery returning tableQuery.map(_.id) into {
+        case(t, id) => copyEntityFields(t, Some(id), t.version, t.created, t.modified)
+      }) ++= newCopies
     }
 
     /**

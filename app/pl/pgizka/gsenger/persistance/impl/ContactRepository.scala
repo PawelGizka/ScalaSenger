@@ -1,9 +1,10 @@
 package pl.pgizka.gsenger.persistance.impl
 
+import pl.pgizka.gsenger.Utils._
 import pl.pgizka.gsenger.core.FbUser
-import pl.pgizka.gsenger.model.{Contact, ContactUserWrapper, User, UserId}
+import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.Profile
-import slick.dbio.DBIOAction
+import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.dbio.Effect.Write
 import slick.lifted.PrimaryKey
 
@@ -32,12 +33,14 @@ trait ContactRepository {this: UserRepository with DeviceRepository with Profile
 
   object contacts extends TableQuery(new Contacts(_)) {
 
-    def findContacts(user: User): DBIO[Seq[(User, Contact)]] = findContactsQuery(user).result
+    def findContacts(user: User): DBIO[Seq[(User, Contact)]] = findContacts(user.id.get)
 
-    def findContactsQuery(user: User) = {
+    def findContacts(userId: UserId): DBIO[Seq[(User, Contact)]] = findContactsQuery(userId).result
+
+    def findContactsQuery(userId: UserId) = {
       for {
         contact <- contacts
-        if contact.userFromId === user.id.get
+        if contact.userFromId === userId
         friend <- contact.userTo
       } yield (friend, contact)
     }
@@ -48,7 +51,7 @@ trait ContactRepository {this: UserRepository with DeviceRepository with Profile
         foundPhoneFriends <- devices.findFriendsByPhoneNumbers(phoneNumbers)
         foundFacebookFriends <- users.findByFacebookUsers(fbUsers)
         dbUpdate <- bulkInsertOrUpdate(updateContacts(userFrom, foundFacebookFriends, foundPhoneFriends, existingContacts))
-        dbResult <- findContactsQuery(userFrom).result
+        dbResult <- findContactsQuery(userFrom.id.get).result
       } yield dbResult
     }
 
@@ -84,5 +87,22 @@ trait ContactRepository {this: UserRepository with DeviceRepository with Profile
     }
 
     def bulkInsertOrUpdate(rows: Iterable[Contact]): DBIO[Iterable[Int]] = DBIO.sequence(rows.map(contacts.insertOrUpdate(_)))
+
+    def ensureEverybodyKnowsEachOther(participants: Seq[Participant]) = {
+      val rows: Seq[DBIO[Seq[Contact]]] = participants.map{participant =>
+        findContacts(participant.user).map{actual =>
+          getNotFoundElements(participants.map(_.user), actual.map(_._1.id.get)).map{ userId =>
+              Contact(participant.user, userId, fromFacebook = false, fromPhone = false)
+          }.filterNot(contact => contact.userFrom == participant.user && contact.userTo == participant.user)
+        }
+      }
+
+      DBIO.sequence(rows.map{dbAction =>
+        dbAction.flatMap{rows =>
+          contacts ++= rows
+        }
+      })
+    }
   }
+
 }

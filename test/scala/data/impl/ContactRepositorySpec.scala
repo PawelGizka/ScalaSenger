@@ -11,18 +11,14 @@ import pl.pgizka.gsenger.core.FbUser
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.H2DBConnector
 import pl.pgizka.gsenger.persistance.impl.DAL
+
 import scala.Utils._
+import scala.data.RepositorySpec
 
 
-class ContactRepositorySpec extends PlaySpec with BeforeAndAfter with ScalaFutures with MockitoSugar
-  with H2DBConnector with DAL {
-
-  implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Minutes))
+class ContactRepositorySpec extends RepositorySpec{
   import scala.concurrent.ExecutionContext.Implicits.global
-
   import profile.api._
-  val time = LocalDateTime.of(2014, 2, 26, 9, 30)
-  val inst = time.toInstant(ZoneOffset.UTC)
 
   val userFrom = testUser(1)
 
@@ -36,17 +32,27 @@ class ContactRepositorySpec extends PlaySpec with BeforeAndAfter with ScalaFutur
 
   val contact1 = Contact(userFrom.id.get, userFriend1.id.get, fromFacebook = false, fromPhone = false)
   val contact2 = Contact(userFrom.id.get, userFriend2.id.get, fromFacebook = false, fromPhone = false)
+  val contact3 = Contact(userFriend1.id.get, userFriend2.id.get, fromFacebook = true, fromPhone = true)
+
+  val chat = testChat(1)
+  val participant1 = testParticipant(userFrom.id.get, chat.id.get)
+  val participant2 = testParticipant(userFriend1.id.get, chat.id.get)
+  val participant3 = testParticipant(userFriend2.id.get, chat.id.get)
 
   val userTestData = List(userFrom, userFriend1, userFriend2, otherUser1)
   val deviceTestData = List(otherUserDevice)
-  val contactTestData = List(contact1, contact2)
+  val contactTestData = List(contact1, contact2, contact3)
+  val chatTestData = List(chat)
+  val participantTestData = List(participant1, participant2, participant3)
 
   before {
     db.run(DBIO.seq(
       schema.create,
       users ++= userTestData,
       contacts ++= contactTestData,
-      devices ++= deviceTestData
+      devices ++= deviceTestData,
+      chats ++= chatTestData,
+      participants ++= participantTestData
     )).futureValue
   }
 
@@ -56,8 +62,9 @@ class ContactRepositorySpec extends PlaySpec with BeforeAndAfter with ScalaFutur
 
   "findContacts" should {
     "find all contacts for specified user" in {
-        val foundContacts = db.run(contacts.findContacts(userFrom)).futureValue
-        foundContacts must have size 2
+      db.run(contacts.findContacts(userFrom)).futureValue must have size 2
+
+      db.run(contacts.findContacts(userFriend1)).futureValue must have size 1
     }
   }
 
@@ -80,6 +87,28 @@ class ContactRepositorySpec extends PlaySpec with BeforeAndAfter with ScalaFutur
       contact2.fromPhone must equal(false)
       contact3.fromPhone must equal(false)
       contact4.fromPhone must equal(true)
+    }
+  }
+
+  "ensureEverybodyKnowsEachOther" should {
+    "insert when contact not exist and do nothing when contact exists" in {
+      db.run(contacts.ensureEverybodyKnowsEachOther(participantTestData)).futureValue
+
+      db.run(contacts.findContacts(userFrom)).futureValue must have size 2
+      db.run(contacts.findContacts(userFriend2)).futureValue must have size 2
+
+      val found = db.run(contacts.findContacts(userFriend1)).futureValue
+      found must have size 2
+
+      val contactsMap = Map[UserId, (User, Contact)](found.map(tuple => (tuple._1.id.get, tuple)):_*)
+      val (user1, contact1) = contactsMap(UserId(1))
+      val (user3, contact3) = contactsMap(UserId(3))
+
+      contact1.fromFacebook must equal(false)
+      contact1.fromPhone must equal(false)
+
+      contact3.fromFacebook must equal(true)
+      contact3.fromPhone must equal(true)
     }
   }
 

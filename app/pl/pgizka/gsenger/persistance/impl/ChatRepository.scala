@@ -2,12 +2,14 @@ package pl.pgizka.gsenger.persistance.impl
 
 import java.time.Instant
 
+import pl.pgizka.gsenger.core.CreateChatRequest
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
 import slick.profile.SqlProfile.ColumnOption.Nullable
 
+import scala.concurrent.ExecutionContext.Implicits.global
 
-trait ChatRepository extends EntityRepository {this: Profile =>
+trait ChatRepository extends EntityRepository {this: ParticipantRepository with Profile =>
 
   import profile.api._
 
@@ -29,7 +31,5 @@ trait ChatRepository extends EntityRepository {this: Profile =>
     override def copyEntityFields(entity: Chat, id: Option[ChatId], version: Option[Version], created: Option[Instant], modified: Option[Instant]): Chat =
       entity.copy(id = id, version = version, created = created, modified = modified)
 
-
   }
-
 }
