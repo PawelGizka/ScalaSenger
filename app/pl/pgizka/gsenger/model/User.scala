@@ -2,9 +2,15 @@ package pl.pgizka.gsenger.model
 
 import java.time.Instant
 
+import pl.pgizka.gsenger.Utils.Js
 import pl.pgizka.gsenger.core.{FbUser, UserFacebookLoginRequest}
+import play.api.libs.json.{Json, OFormat}
 
 case class UserId(value: Long) extends EntityId(value)
+
+object UserId {
+  implicit val userIdFormat: Js[UserId] = Json.format[UserId]
+}
 
 case class User(
   id: Option[UserId],

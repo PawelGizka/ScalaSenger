@@ -20,7 +20,7 @@ class ChatsController(override val dataAccess: DAL with DatabaseSupport, val fac
   def createChat: Action[JsValue] = Authenticate.async(parse.json) { request =>
     val createChatRequest = request.body.as[CreateChatRequest]
 
-    db.run(users.find(createChatRequest.participants.map(UserId))).flatMap{foundUsers =>
+    db.run(users.find(createChatRequest.participants.map(new UserId(_)))).flatMap{foundUsers =>
       if (foundUsers.size == createChatRequest.participants.size) {
         insertChatOkResponse(createChatRequest, request.user)
       } else {
@@ -47,6 +47,15 @@ class ChatsController(override val dataAccess: DAL with DatabaseSupport, val fac
     Future(BadRequest(Json.toJson(new ErrorResponse(CouldNotFindUsersError, errorMessage))))
   }
 
+  def listAllChatsWithParticipantInfo: Action[JsValue] = Authenticate.async(parse.json) { request =>
+    val chatsInfo= for {
+      chatsFound <- db.run(chats.findAllChats(request.user.id.get))
+      chatsWithParticipants <- db.run(participants.findAllParticipants(chatsFound))
+    } yield chatsWithParticipants.map(ChatInfo(_))
 
+    chatsInfo.map{chatsInfos =>
+      Ok(Json.toJson(ListAllChatsWithParticipantInfoResponse(chatsInfos)))
+    } recover databaseError
+  }
 
 }

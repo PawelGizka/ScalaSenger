@@ -1,5 +1,7 @@
 package pl.pgizka.gsenger
 
+import play.api.libs.json.OFormat
+
 import scala.collection.mutable
 
 
@@ -11,4 +13,9 @@ object Utils {
     map.keySet.toSeq
   }
 
+  /**
+    * Type alias for OFormat[A]
+    * @tparam A
+    */
+  type Js[A] = OFormat[A]
 }

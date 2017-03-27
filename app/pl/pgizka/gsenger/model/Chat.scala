@@ -3,9 +3,15 @@ package pl.pgizka.gsenger.model
 import java.time
 import java.time.Instant
 
+import pl.pgizka.gsenger.Utils.Js
 import pl.pgizka.gsenger.core.CreateChatRequest
+import play.api.libs.json.{Json, OFormat}
 
 case class ChatId(value: Long) extends EntityId(value)
+
+object ChatId {
+  implicit val chatIdFormat: Js[ChatId] = Json.format[ChatId]
+}
 
 case class Chat(
   id: Option[ChatId],

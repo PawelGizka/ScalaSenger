@@ -31,5 +31,13 @@ trait ChatRepository extends EntityRepository {this: ParticipantRepository with 
     override def copyEntityFields(entity: Chat, id: Option[ChatId], version: Option[Version], created: Option[Instant], modified: Option[Instant]): Chat =
       entity.copy(id = id, version = version, created = created, modified = modified)
 
+    def findAllChats(userId: UserId): DBIO[Seq[Chat]] = {
+      (for {
+        participant <- participants
+        if participant.userId === userId
+        chat <- participant.chat
+      } yield chat).result
+    }
+
   }
 }

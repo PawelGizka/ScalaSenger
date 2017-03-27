@@ -6,6 +6,7 @@ import pl.pgizka.gsenger.core.CreateChatRequest
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
 import slick.profile.SqlProfile.ColumnOption.Nullable
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 trait ParticipantRepository extends EntityRepository {this: ChatRepository with UserRepository with MessageRepository with Profile =>
@@ -37,6 +38,19 @@ trait ParticipantRepository extends EntityRepository {this: ChatRepository with 
     def insertFromCreateChatRequest(createChatRequest: CreateChatRequest, chat: Chat, user: User): DBIO[Seq[Participant]] = {
       val participantsIds = (createChatRequest.participants :+ user.idValue).distinct
       insert(participantsIds.map(participantId => new Participant(chat, UserId(participantId))))
+    }
+
+    def findAllParticipants(chats: Seq[Chat]): DBIO[Seq[(Chat, Seq[Participant])]]= {
+      DBIO.sequence(chats.map(chat => findAllParticipants(chat.id.get).map(participantsFound =>(chat, participantsFound))))
+    }
+
+    def findAllParticipants(chatId: ChatId): DBIO[Seq[Participant]] = findAllParticipantsQuery(chatId).result
+
+    def findAllParticipantsQuery(chatId: ChatId) = {
+      for {
+        participant <- participants
+        if participant.chatId === chatId
+      } yield participant
     }
   }
 
