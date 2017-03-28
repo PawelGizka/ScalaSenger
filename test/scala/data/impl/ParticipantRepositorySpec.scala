@@ -23,20 +23,27 @@ class ParticipantRepositorySpec extends RepositorySpec {
   val user1 = testUser(1)
   val user2 = testUser(2)
   val user3 = testUser(3)
-  val chat = testChat(1)
 
-  val participantIds = Seq(user2.idValue, user3.idValue)
+  val chat1 = testChat(1)
+  val chat2 = testChat(2)
 
-  val createChatRequest = CreateChatRequest(chat.chatType, chat.name, participantIds)
+  val participant1 = testParticipant(user1.id.get, chat1.id.get)
+  val participant2 = testParticipant(user2.id.get, chat1.id.get)
+
+  val participant3 = testParticipant(user1.id.get, chat2.id.get)
+  val participant4 = testParticipant(user3.id.get, chat2.id.get)
+
 
   val userTestData = List(user1, user2, user3)
-  val chatTestData = List(chat)
+  val chatTestData = List(chat1, chat2)
+  val participantTestData = List(participant1, participant2, participant3, participant4)
 
   before {
     db.run(DBIO.seq(
       schema.create,
       users ++= userTestData,
-      chats ++= chatTestData
+      chats ++= chatTestData,
+      participants ++= participantTestData
     )).futureValue
   }
 
@@ -46,11 +53,25 @@ class ParticipantRepositorySpec extends RepositorySpec {
 
   "insertFromChatRequest" should {
     "create and insert all participants from charRequest" in {
-      val result = db.run(participants.insertFromCreateChatRequest(createChatRequest, chat, user1)).futureValue
+      val participantIds = Seq(user2.idValue, user3.idValue)
+      val createChatRequest = CreateChatRequest(chat1.chatType, chat1.name, participantIds)
+
+      val result = db.run(participants.insertFromCreateChatRequest(createChatRequest, chat1, user1)).futureValue
 
       result must have size 3
       result.foreach{ participant =>
-        participant.chat must equal(chat.id.get)
+        participant.chat must equal(chat1.id.get)
+      }
+    }
+  }
+
+  "findAllParticipants" should {
+    "return all participants for specified chats" in {
+      val result = db.run(participants.findAllParticipants(chatTestData)).futureValue
+
+      result must have size 2
+      result foreach{case (chat, participants) =>
+        participants must have size 2
       }
     }
   }

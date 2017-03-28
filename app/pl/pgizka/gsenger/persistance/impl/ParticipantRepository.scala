@@ -46,7 +46,7 @@ trait ParticipantRepository extends EntityRepository {this: ChatRepository with 
 
     def findAllParticipants(chatId: ChatId): DBIO[Seq[Participant]] = findAllParticipantsQuery(chatId).result
 
-    def findAllParticipantsQuery(chatId: ChatId) = {
+    def findAllParticipantsQuery(chatId: ChatId): Query[Participants, Participant, Seq] = {
       for {
         participant <- participants
         if participant.chatId === chatId
