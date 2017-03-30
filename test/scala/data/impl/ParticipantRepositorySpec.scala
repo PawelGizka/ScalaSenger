@@ -13,10 +13,10 @@ import pl.pgizka.gsenger.persistance.H2DBConnector
 import pl.pgizka.gsenger.persistance.impl.DAL
 
 import scala.Utils.{testChat, testDevice, testParticipant, testUser}
-import scala.data.RepositorySpec
+import scala.data.BasicSpec
 
 
-class ParticipantRepositorySpec extends RepositorySpec {
+class ParticipantRepositorySpec extends BasicSpec {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 

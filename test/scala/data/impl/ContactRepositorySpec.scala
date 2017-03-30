@@ -13,10 +13,10 @@ import pl.pgizka.gsenger.persistance.H2DBConnector
 import pl.pgizka.gsenger.persistance.impl.DAL
 
 import scala.Utils._
-import scala.data.RepositorySpec
+import scala.data.BasicSpec
 
 
-class ContactRepositorySpec extends RepositorySpec{
+class ContactRepositorySpec extends BasicSpec{
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 

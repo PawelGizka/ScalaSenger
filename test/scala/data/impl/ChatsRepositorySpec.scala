@@ -10,10 +10,10 @@ import pl.pgizka.gsenger.persistance.H2DBConnector
 import pl.pgizka.gsenger.persistance.impl.DAL
 
 import scala.Utils._
-import scala.data.RepositorySpec
+import scala.data.BasicSpec
 
 
-class ChatsRepositorySpec extends RepositorySpec {
+class ChatsRepositorySpec extends BasicSpec {
 
   import profile.api._
 

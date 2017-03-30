@@ -11,7 +11,7 @@ import pl.pgizka.gsenger.persistance.H2DBConnector
 import pl.pgizka.gsenger.persistance.impl.DAL
 
 
-class RepositorySpec extends PlaySpec with BeforeAndAfter with ScalaFutures with MockitoSugar
+class BasicSpec extends PlaySpec with BeforeAndAfter with ScalaFutures with MockitoSugar
   with H2DBConnector with DAL {
 
   implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Minutes))

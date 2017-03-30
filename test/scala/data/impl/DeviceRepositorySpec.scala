@@ -12,9 +12,9 @@ import pl.pgizka.gsenger.persistance.H2DBConnector
 import pl.pgizka.gsenger.persistance.impl.{DeviceRepository, UserRepository}
 
 import scala.Utils._
-import scala.data.RepositorySpec
+import scala.data.BasicSpec
 
-class DeviceRepositorySpec extends RepositorySpec {
+class DeviceRepositorySpec extends BasicSpec {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 

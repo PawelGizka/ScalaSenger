@@ -12,10 +12,10 @@ import pl.pgizka.gsenger.persistance.H2DBConnector
 import pl.pgizka.gsenger.persistance.impl.UserRepository
 
 import scala.Utils._
-import scala.data.{RepositorySpec, TestEntity, TestEntityId}
+import scala.data.{BasicSpec, TestEntity, TestEntityId}
 
 
-class UserRepositorySpec extends RepositorySpec {
+class UserRepositorySpec extends BasicSpec {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 

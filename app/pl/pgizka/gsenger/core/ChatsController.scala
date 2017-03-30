@@ -42,12 +42,12 @@ class ChatsController(override val dataAccess: DAL with DatabaseSupport) extends
   } yield chat.id.get
 
   private def insertChatErrorResponse(createChatRequest: CreateChatRequest, foundUsers: Seq[User]) = {
-    val errorMessage = "Not found users ids: " +
-      getNotFoundElements(createChatRequest.participants, foundUsers.map(_.id.get.value)).foldLeft("")((a, b) => a + ",  " + b)
+    val notFoundIds = getNotFoundElements(createChatRequest.participants, foundUsers.map(_.id.get.value))
+    val errorMessage = formatSequenceMessage("Not found users ids: ", notFoundIds)
     Future(BadRequest(Json.toJson(new ErrorResponse(CouldNotFindUsersError, errorMessage))))
   }
 
-  def listAllChatsWithParticipantInfo: Action[JsValue] = Authenticate.async(parse.json) { request =>
+  def listAllChatsWithParticipantInfo = Authenticate.async{ request =>
     val chatsInfo= for {
       chatsFound <- db.run(chats.findAllChats(request.user.id.get))
       chatsWithParticipants <- db.run(participants.findAllParticipants(chatsFound))

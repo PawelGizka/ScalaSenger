@@ -13,6 +13,9 @@ object Utils {
     map.keySet.toSeq
   }
 
+  def formatSequenceMessage[A](message: String, elements: Seq[A]): String =
+    message + " " + elements.foldLeft("")((a, b) => a + ",  " + b)
+
   /**
     * Type alias for OFormat[A]
     * @tparam A

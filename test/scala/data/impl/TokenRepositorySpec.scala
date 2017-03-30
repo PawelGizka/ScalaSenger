@@ -12,9 +12,9 @@ import pl.pgizka.gsenger.persistance.H2DBConnector
 import pl.pgizka.gsenger.persistance.impl.DAL
 
 import scala.Utils._
-import scala.data.RepositorySpec
+import scala.data.BasicSpec
 
-class TokenRepositorySpec extends RepositorySpec {
+class TokenRepositorySpec extends BasicSpec {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 
