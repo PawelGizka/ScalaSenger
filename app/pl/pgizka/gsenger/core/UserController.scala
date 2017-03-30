@@ -1,18 +1,16 @@
 package pl.pgizka.gsenger.core
 
+import pl.pgizka.gsenger.core.GetFriendsResponse._
 import pl.pgizka.gsenger.core.errors._
 import pl.pgizka.gsenger.model.{Contact, User}
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
-import pl.pgizka.gsenger.core.GetFriendsResponse._
-import play.Logger
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 class UserController(override val dataAccess: DAL with DatabaseSupport, val facebookService: FacebookService) extends CommonController(dataAccess) {
   import dataAccess._

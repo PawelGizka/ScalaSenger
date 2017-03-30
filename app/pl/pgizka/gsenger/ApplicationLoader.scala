@@ -18,7 +18,7 @@ class ApplicationModule(context: Context) extends BuiltInComponentsFromContext(c
 
   lazy val userController = new UserController(boot, realFacebookService)
 
-  lazy val chatsController = new ChatsController(boot, realFacebookService)
+  lazy val chatsController = new ChatsController(boot)
 
-  lazy val router = new Routes(httpErrorHandler, userController, assets)
+  lazy val router = new Routes(httpErrorHandler, userController, chatsController, assets)
 }

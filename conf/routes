@@ -2,10 +2,14 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# Home page
-#POST     /registerUser
+
+POST     /user/register         pl.pgizka.gsenger.core.UserController.loginFacebookUser
+GET      /user/getFriends       pl.pgizka.gsenger.core.UserController.getFriends
+
+PUT      /chat/create           pl.pgizka.gsenger.core.ChatsController.createChat
+GET      /chat/listAll          pl.pgizka.gsenger.core.ChatsController.listAllChatsWithParticipantInfo
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file        controllers.Assets.at(path="/public", file)
+GET     /assets/*file           controllers.Assets.at(path="/public", file)
 
     

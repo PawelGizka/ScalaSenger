@@ -13,7 +13,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class ChatsController(override val dataAccess: DAL with DatabaseSupport, val facebookService: FacebookService) extends CommonController(dataAccess) {
+class ChatsController(override val dataAccess: DAL with DatabaseSupport) extends CommonController(dataAccess) {
   import dataAccess._
   import profile.api._
 
