@@ -20,4 +20,13 @@ case class Message(
   chat: ChatId,
   sender: UserId,
   number: Long,
-  text: String) extends Entity[MessageId]
+  text: String) extends Entity[MessageId]{
+
+  def this(chatId: ChatId, senderId: UserId, text: String, number: Long) =
+    this(None, None, None, None, chatId, senderId, number, text)
+
+}
+
+object Message {
+  implicit val messageFormat: Js[Message] = Json.format[Message]
+}

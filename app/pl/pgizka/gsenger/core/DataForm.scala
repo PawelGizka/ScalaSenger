@@ -87,8 +87,11 @@ object ListAllChatsWithParticipantInfoResponse {
   implicit val listAllChatsWithParticipantInfoResponseFormat: Js[ListAllChatsWithParticipantInfoResponse] = Json.format[ListAllChatsWithParticipantInfoResponse]
 }
 
+case class CreateMessageRequest(chatId: ChatId, text: String)
 
-
+object CreateMessageRequest {
+  implicit val createMessageRequestFormat: Js[CreateMessageRequest] = Json.format[CreateMessageRequest]
+}
 
 
 

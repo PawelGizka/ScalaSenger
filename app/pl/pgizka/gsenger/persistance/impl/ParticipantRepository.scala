@@ -40,6 +40,9 @@ trait ParticipantRepository extends EntityRepository {this: ChatRepository with 
       insert(participantsIds.map(participantId => new Participant(chat, UserId(participantId))))
     }
 
+    def isUserParticipant(chatId: ChatId, userId: UserId): DBIO[Boolean] =
+      findAllParticipantsQuery(chatId).filter(_.userId === userId).exists.result
+
     def findAllParticipants(chats: Seq[Chat]): DBIO[Seq[(Chat, Seq[Participant])]]= {
       DBIO.sequence(chats.map(chat => findAllParticipants(chat.id.get).map(participantsFound =>(chat, participantsFound))))
     }

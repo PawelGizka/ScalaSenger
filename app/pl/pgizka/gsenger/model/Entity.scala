@@ -2,6 +2,7 @@ package pl.pgizka.gsenger.model
 
 import java.time.Instant
 
+import play.api.libs.json.Json
 import slick.lifted.MappedTo
 
 /**
@@ -13,6 +14,10 @@ abstract class EntityId(value: Long) extends MappedTo[Long] {
 
 case class Version(value: Long) extends MappedTo[Long] {
   def increment() = copy(value + 1)
+}
+
+object Version {
+  implicit val versionFormat = Json.format[Version]
 }
 
 /**

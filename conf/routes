@@ -9,6 +9,8 @@ GET      /user/getFriends       pl.pgizka.gsenger.core.UserController.getFriends
 PUT      /chat/create           pl.pgizka.gsenger.core.ChatsController.createChat
 GET      /chat/listAll          pl.pgizka.gsenger.core.ChatsController.listAllChatsWithParticipantInfo
 
+PUT      /message/create        pl.pgizka.gsenger.core.MessageController.createMessage
+
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file           controllers.Assets.at(path="/public", file)
 
