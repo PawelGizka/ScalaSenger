@@ -18,5 +18,4 @@ class BasicSpec extends PlaySpec with BeforeAndAfter with ScalaFutures with Mock
   val time = LocalDateTime.of(2014, 2, 26, 9, 30)
   val inst = time.toInstant(ZoneOffset.UTC)
 
-
 }

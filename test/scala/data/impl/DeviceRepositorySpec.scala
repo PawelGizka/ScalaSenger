@@ -1,59 +1,25 @@
 package scala.data.impl
 
-import java.time.{LocalDateTime, ZoneOffset}
-
 import pl.pgizka.gsenger.core.UserFacebookLoginRequest
 import pl.pgizka.gsenger.model._
-import org.scalatest.{BeforeAndAfter, FunSpec, ShouldMatchers}
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Seconds, Span}
-import org.scalatestplus.play.PlaySpec
-import pl.pgizka.gsenger.persistance.H2DBConnector
-import pl.pgizka.gsenger.persistance.impl.{DeviceRepository, UserRepository}
 
-import scala.Utils._
-import scala.data.BasicSpec
+import scala.data.{BasicSpec, BasicSpecWithDefaultScenario}
 
-class DeviceRepositorySpec extends BasicSpec {
+class DeviceRepositorySpec extends BasicSpecWithDefaultScenario {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 
-  val user1 = testUser(1)
-
-  val user2 = testUser(2)
-
-  val device = testDevice(1, user1)
-
-  before {
-    db.run(DBIO.seq(
-      schema.create,
-      users += user1,
-      users += user2,
-      devices += device
-    )).futureValue
-  }
-
-  after {
-    db.run(schema.drop)
-  }
-
-  "list" should {
-    "should return all entities in table" in {
-      val result = db.run(devices.list()).futureValue
-      result must have length(1)
-      result.head must equal(device)
-    }
-  }
+  import scala.data.DefaultScenario._
 
   "findByDeviceId" should {
     "should return None if no matching device with device id" in {
-      db.run(devices.findByDeviceId("device id 2")).futureValue must equal (scala.None)
+      db.run(devices.findByDeviceId("device id 211")).futureValue must equal (scala.None)
     }
 
     "should return some device with match device id" in {
       val result = db.run(devices.findByDeviceId("device id 1")).futureValue
       result must be ('defined)
-      result.get must be (device)
+      result.get must be (device1)
     }
   }
 

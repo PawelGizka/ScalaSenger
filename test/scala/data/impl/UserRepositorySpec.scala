@@ -1,45 +1,16 @@
 package scala.data.impl
 
-import java.time.{LocalDateTime, ZoneOffset}
 
 import pl.pgizka.gsenger.core.{FbUser, UserFacebookLoginRequest}
-import pl.pgizka.gsenger.model.{User, UserId, Version}
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Seconds, Span}
-import org.scalatest.{BeforeAndAfter, FunSpec, ShouldMatchers, TestData}
-import org.scalatestplus.play.PlaySpec
-import pl.pgizka.gsenger.persistance.H2DBConnector
-import pl.pgizka.gsenger.persistance.impl.UserRepository
-
-import scala.Utils._
-import scala.data.{BasicSpec, TestEntity, TestEntityId}
+import pl.pgizka.gsenger.model.UserId
+import scala.data.BasicSpecWithDefaultScenario
 
 
-class UserRepositorySpec extends BasicSpec {
+class UserRepositorySpec extends BasicSpecWithDefaultScenario {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 
-  val testData = List(
-    testUser(1),
-    testUser(2)
-  )
-
-  before {
-    db.run(DBIO.seq(
-      users.schema.create,
-      users ++= testData
-    )).futureValue
-  }
-
-  after {
-    db.run(users.schema.drop)
-  }
-
-  "list" should {
-    "should return all entities in the table" in {
-      db.run(users.list()).futureValue must have length (2)
-    }
-  }
+  import scala.data.DefaultScenario._
 
   "findByFacebookId" should {
     "should return None if no matching user with facebook id" in {
