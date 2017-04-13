@@ -1,9 +1,9 @@
 package pl.pgizka.gsenger.persistance.impl
 
 import pl.pgizka.gsenger.Utils._
-import pl.pgizka.gsenger.core.FbUser
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.Profile
+import pl.pgizka.gsenger.services.facebook.FbUser
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.dbio.Effect.Write
 import slick.lifted.PrimaryKey

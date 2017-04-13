@@ -3,7 +3,8 @@ package pl.pgizka.gsenger.model
 import java.time.Instant
 
 import pl.pgizka.gsenger.Utils.Js
-import pl.pgizka.gsenger.core.{FbUser, UserFacebookLoginRequest}
+import pl.pgizka.gsenger.controllers.user.UserFacebookLoginRequest
+import pl.pgizka.gsenger.services.facebook.FbUser
 import play.api.libs.json.{Json, OFormat}
 
 case class UserId(value: Long) extends EntityId(value)

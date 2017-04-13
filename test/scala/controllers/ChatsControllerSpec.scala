@@ -1,9 +1,9 @@
 package scala.controllers
 
 import pl.pgizka.gsenger.Utils.formatSequenceMessage
+import pl.pgizka.gsenger.controllers.chat.{ChatController, CreateChatRequest, CreateChatResponse, ListAllChatsWithParticipantInfoResponse}
 import pl.pgizka.gsenger.core._
-import pl.pgizka.gsenger.core.Error._
-import pl.pgizka.gsenger.core.errors._
+import pl.pgizka.gsenger.controllers.errors._
 import pl.pgizka.gsenger.model.ChatType
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
@@ -16,7 +16,7 @@ import scala.concurrent.Future
 
 class ChatsControllerSpec extends ControllerSpec {
 
-  val chatsController = new ChatsController(this)
+  val chatsController = new ChatController(this)
 
   import profile.api._
 

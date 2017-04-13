@@ -1,10 +1,10 @@
-package pl.pgizka.gsenger
+package pl.pgizka.gsenger.startup
 
-import pl.pgizka.gsenger.core.{ChatsController, UserController, realFacebookService}
+import pl.pgizka.gsenger.controllers.chat.ChatController
+import pl.pgizka.gsenger.controllers.user.UserController
+import pl.pgizka.gsenger.services.facebook.realFacebookService
 import play.api.ApplicationLoader.Context
-import play.api.{BuiltInComponents, BuiltInComponentsFromContext}
-import play.api.cache.EhCacheComponents
-import play.api.routing.Router
+import play.api.BuiltInComponentsFromContext
 import router.Routes
 
 class ApplicationLoader extends play.api.ApplicationLoader {
@@ -18,7 +18,7 @@ class ApplicationModule(context: Context) extends BuiltInComponentsFromContext(c
 
   lazy val userController = new UserController(boot, realFacebookService)
 
-  lazy val chatsController = new ChatsController(boot)
+  lazy val chatsController = new ChatController(boot)
 
   lazy val router = new Routes(httpErrorHandler, userController, chatsController, assets)
 }

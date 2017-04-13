@@ -1,8 +1,8 @@
-package pl.pgizka.gsenger.core
+package pl.pgizka.gsenger.controllers
 
-import pl.pgizka.gsenger.core.errors.DatabaseError
+import pl.pgizka.gsenger.controllers.errors._
 import pl.pgizka.gsenger.model.User
-import pl.pgizka.gsenger.persistance.{DatabaseSupport, Profile}
+import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
@@ -13,7 +13,6 @@ import scala.concurrent.Future
 
 class CommonController(val dataAccess: DAL with DatabaseSupport) extends Controller{
   import dataAccess._
-  import profile.api._
 
   class UserRequest[A](val user: User, request: Request[A]) extends WrappedRequest[A](request)
 

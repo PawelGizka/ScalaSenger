@@ -1,8 +1,8 @@
-package pl.pgizka.gsenger.core
+package pl.pgizka.gsenger.controllers.message
 
+import pl.pgizka.gsenger.controllers.CommonController
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
-import pl.pgizka.gsenger.core.CreateMessageRequest._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Action
 

@@ -2,10 +2,11 @@ package pl.pgizka.gsenger.persistance.impl
 
 import java.time.Instant
 
-import pl.pgizka.gsenger.core.CreateChatRequest
+import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
 import slick.profile.SqlProfile.ColumnOption.Nullable
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 

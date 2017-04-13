@@ -4,7 +4,7 @@ import java.time
 import java.time.Instant
 
 import pl.pgizka.gsenger.Utils.Js
-import pl.pgizka.gsenger.core.CreateChatRequest
+import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
 import play.api.libs.json.{Json, OFormat}
 
 case class ChatId(value: Long) extends EntityId(value)

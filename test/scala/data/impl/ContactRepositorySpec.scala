@@ -1,7 +1,7 @@
 package scala.data.impl
 
-import pl.pgizka.gsenger.core.FbUser
 import pl.pgizka.gsenger.model._
+import pl.pgizka.gsenger.services.facebook.FbUser
 
 import scala.data.{BasicSpec, BasicSpecWithDefaultScenario}
 

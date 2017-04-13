@@ -1,13 +1,15 @@
 package scala.controllers
 
-import pl.pgizka.gsenger.core.{UserController, _}
+import pl.pgizka.gsenger.core._
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import org.mockito.Mockito._
 import org.specs2.mock.mockito.MockitoMatchers._
-import scala.Utils._
+import pl.pgizka.gsenger.controllers.user.{UserController, UserFacebookLoginRequest, UserLoginRegistrationResponse}
+import pl.pgizka.gsenger.services.facebook.{FacebookService, FbUser}
 
+import scala.Utils._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 

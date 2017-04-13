@@ -1,6 +1,6 @@
 package scala.data.impl
 
-import pl.pgizka.gsenger.core.UserFacebookLoginRequest
+import pl.pgizka.gsenger.controllers.user.UserFacebookLoginRequest
 import pl.pgizka.gsenger.model._
 
 import scala.data.{BasicSpec, BasicSpecWithDefaultScenario}

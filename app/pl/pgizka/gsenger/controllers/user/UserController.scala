@@ -1,10 +1,13 @@
-package pl.pgizka.gsenger.core
+package pl.pgizka.gsenger.controllers.user
 
-import pl.pgizka.gsenger.core.GetFriendsResponse._
-import pl.pgizka.gsenger.core.errors._
+import pl.pgizka.gsenger.controllers.{CommonController, ErrorResponse}
+import pl.pgizka.gsenger.controllers.user._
+import pl.pgizka.gsenger.core._
+import pl.pgizka.gsenger.controllers.errors._
 import pl.pgizka.gsenger.model.{Contact, User}
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
+import pl.pgizka.gsenger.services.facebook.FacebookService
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._

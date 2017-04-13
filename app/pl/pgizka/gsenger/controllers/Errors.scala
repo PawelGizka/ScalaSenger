@@ -1,4 +1,4 @@
-package pl.pgizka.gsenger.core
+package pl.pgizka.gsenger.controllers
 
 import play.api.libs.json.Json
 

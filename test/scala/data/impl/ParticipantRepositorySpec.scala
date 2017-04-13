@@ -1,7 +1,7 @@
 package scala.data.impl
 
 
-import pl.pgizka.gsenger.core.CreateChatRequest
+import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
 
 import scala.data.{BasicSpec, BasicSpecWithDefaultScenario}
 

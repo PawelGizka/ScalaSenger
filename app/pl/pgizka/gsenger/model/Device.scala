@@ -2,7 +2,7 @@ package pl.pgizka.gsenger.model
 
 import java.time.Instant
 
-import pl.pgizka.gsenger.core.UserFacebookLoginRequest
+import pl.pgizka.gsenger.controllers.user.UserFacebookLoginRequest
 
 case class DeviceId(value: Long) extends EntityId(value)
 

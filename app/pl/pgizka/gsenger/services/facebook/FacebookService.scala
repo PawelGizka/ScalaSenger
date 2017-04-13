@@ -1,4 +1,4 @@
-package pl.pgizka.gsenger.core
+package pl.pgizka.gsenger.services.facebook
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
@@ -8,7 +8,6 @@ import play.api.libs.ws.ning.NingWSClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Failure
 
 trait FacebookService {
   def fetchFacebookUser(facebookToken: String): Future[Either[String, FbUser]]

@@ -1,7 +1,7 @@
-package pl.pgizka.gsenger
+package pl.pgizka.gsenger.startup
 
+import pl.pgizka.gsenger.persistance.H2DBConnector
 import pl.pgizka.gsenger.persistance.impl.DAL
-import pl.pgizka.gsenger.persistance.{DatabaseSupport, H2DBConnector}
 
 
 

@@ -2,9 +2,10 @@ package pl.pgizka.gsenger.persistance.impl
 
 import java.time.Instant
 
-import pl.pgizka.gsenger.core.{FbUser, UserFacebookLoginRequest}
+import pl.pgizka.gsenger.controllers.user.UserFacebookLoginRequest
 import pl.pgizka.gsenger.model.{User, UserId, Version}
 import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
+import pl.pgizka.gsenger.services.facebook.FbUser
 import slick.profile.SqlProfile.ColumnOption.Nullable
 
 import scala.concurrent.ExecutionContext

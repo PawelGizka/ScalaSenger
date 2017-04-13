@@ -2,7 +2,7 @@ package scala
 
 import java.time.{LocalDateTime, ZoneOffset}
 
-import pl.pgizka.gsenger.core.{CreateChatResponse, ErrorResponse}
+import pl.pgizka.gsenger.controllers.ErrorResponse
 import pl.pgizka.gsenger.model._
 import play.api.libs.json.{Json, OFormat}
 import play.api.mvc.Result

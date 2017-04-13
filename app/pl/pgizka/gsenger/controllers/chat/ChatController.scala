@@ -1,19 +1,20 @@
-package pl.pgizka.gsenger.core
+package pl.pgizka.gsenger.controllers.chat
 
 import pl.pgizka.gsenger.Utils._
-import pl.pgizka.gsenger.core.errors.CouldNotFindUsersError
+import pl.pgizka.gsenger.controllers.{CommonController, ErrorResponse}
+import pl.pgizka.gsenger.core._
+import pl.pgizka.gsenger.controllers.errors.CouldNotFindUsersError
 import pl.pgizka.gsenger.model.{Chat, User, UserId}
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Action
 
-import scala.collection.mutable
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 
-class ChatsController(override val dataAccess: DAL with DatabaseSupport) extends CommonController(dataAccess) {
+class ChatController(override val dataAccess: DAL with DatabaseSupport) extends CommonController(dataAccess) {
   import dataAccess._
   import profile.api._
 
