@@ -19,4 +19,5 @@ object errors {
   val DatabaseError = Error(2, "Database error has occurred")
   val FetchFacebookDataError = Error(3, "Cannot fetch facebook data")
   val CouldNotFindUsersError = Error(4, "Could not find all users by specified ids")
+  val CouldNotFindChatError = Error(5, "Could not find chat with specified id")
 }

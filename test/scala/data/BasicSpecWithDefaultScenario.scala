@@ -21,7 +21,8 @@ class BasicSpecWithDefaultScenario extends BasicSpec {
     devices ++= deviceTestData,
     contacts ++= contactTestData,
     chats ++= chatTestData,
-    participants ++= participantTestData
+    participants ++= participantTestData,
+    messages ++= messageTestData
   )
 
 }

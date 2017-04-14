@@ -1,6 +1,6 @@
 package scala.data
 
-import pl.pgizka.gsenger.model.Contact
+import pl.pgizka.gsenger.model.{ChatId, Contact}
 
 import scala.Utils._
 
@@ -32,6 +32,9 @@ object DefaultScenario {
   val participant3 = testParticipant(user1.id.get, chat2.id.get)
   val participant4 = testParticipant(user3.id.get, chat2.id.get)
 
+  val message1 = testMessage(1, user1.id.get, chat1.id.get)
+  val message2 = testMessage(2, user1.id.get, chat1.id.get)
+  val message3 = testMessage(3, user1.id.get, chat1.id.get)
 
   val userTestData = List(user1, user2, user3, user4, user5)
   val tokenTestData = List(token1, token2, token3, token4, token5)
@@ -39,5 +42,6 @@ object DefaultScenario {
   val contactTestData = List(contact1, contact2, contact3)
   val chatTestData = List(chat1, chat2)
   val participantTestData = List(participant1, participant2, participant3, participant4)
+  val messageTestData = List(message1, message2, message3)
 
 }
