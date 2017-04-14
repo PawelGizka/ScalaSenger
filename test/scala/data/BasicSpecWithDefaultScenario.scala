@@ -4,7 +4,7 @@ package scala.data
 class BasicSpecWithDefaultScenario extends BasicSpec {
 
   import profile.api._
-  import DefaultScenario._
+  import pl.pgizka.gsenger.startup.DefaultScenario._
 
   before {
     db.run(createDefaultScenarioAction).futureValue

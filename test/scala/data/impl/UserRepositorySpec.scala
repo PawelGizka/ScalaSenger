@@ -12,7 +12,7 @@ class UserRepositorySpec extends BasicSpecWithDefaultScenario {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 
-  import scala.data.DefaultScenario._
+  import pl.pgizka.gsenger.startup.DefaultScenario._
 
   "findByFacebookId" should {
     "should return None if no matching user with facebook id" in {

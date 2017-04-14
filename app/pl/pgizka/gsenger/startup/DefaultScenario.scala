@@ -1,8 +1,7 @@
-package scala.data
+package pl.pgizka.gsenger.startup
 
 import pl.pgizka.gsenger.model.Contact
-
-import scala.Utils._
+import pl.pgizka.gsenger.Utils._
 
 
 object DefaultScenario {

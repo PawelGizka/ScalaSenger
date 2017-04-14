@@ -9,7 +9,7 @@ class ParticipantRepositorySpec extends BasicSpecWithDefaultScenario {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 
-  import scala.data.DefaultScenario._
+  import pl.pgizka.gsenger.startup.DefaultScenario._
 
   "insertFromChatRequest" should {
     "create and insert all participants from charRequest" in {

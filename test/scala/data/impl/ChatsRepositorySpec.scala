@@ -6,7 +6,7 @@ import scala.data.{BasicSpecWithDefaultScenario}
 class ChatsRepositorySpec extends BasicSpecWithDefaultScenario {
   import profile.api._
 
-  import scala.data.DefaultScenario._
+  import pl.pgizka.gsenger.startup.DefaultScenario._
 
   "findAllChats" should {
     "return all chats for specified user" in {

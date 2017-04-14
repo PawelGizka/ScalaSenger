@@ -9,7 +9,7 @@ class DeviceRepositorySpec extends BasicSpecWithDefaultScenario {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 
-  import scala.data.DefaultScenario._
+  import pl.pgizka.gsenger.startup.DefaultScenario._
 
   "findByDeviceId" should {
     "should return None if no matching device with device id" in {

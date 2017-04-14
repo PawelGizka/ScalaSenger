@@ -6,7 +6,7 @@ class TokenRepositorySpec extends BasicSpecWithDefaultScenario {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 
-  import scala.data.DefaultScenario._
+  import pl.pgizka.gsenger.startup.DefaultScenario._
 
   "generateTokens" should {
     "generate new token for user" in {
