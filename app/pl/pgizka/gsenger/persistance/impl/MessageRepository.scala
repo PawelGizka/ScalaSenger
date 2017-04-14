@@ -37,7 +37,11 @@ trait MessageRepository extends EntityRepository {this: ChatRepository with User
       val lastMessages: DBIO[Seq[Message]] = messages.filter(_.chatId === chatId).sortBy(_.number.desc).take(1).result
 
       lastMessages.flatMap{lastMessages =>
-        insert(new Message(chatId, senderId, text, lastMessages.head.number + 1))
+        if (lastMessages.isEmpty) {
+          insert(new Message(chatId, senderId, text, 1))
+        } else {
+          insert(new Message(chatId, senderId, text, lastMessages.head.number + 1))
+        }
       }
     }
   }

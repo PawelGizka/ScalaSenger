@@ -30,6 +30,9 @@ object Utils {
 
   def testParticipant(userId: UserId, chatId: ChatId) = Participant(None, None, None, None, userId, chatId, None, None)
 
+  def testMessage(id: Long, sender: UserId, chatId: ChatId) =
+    Message(Some(MessageId(id)), None, None, None, chatId, sender, id, "message text " + id)
+
   def contentAsErrorResponse: (Future[Result]) => ErrorResponse = contentAs[ErrorResponse]
 
   def contentAs[A](response: Future[Result])(implicit typeFormat: OFormat[A]) = Json.fromJson(contentAsJson(response))(typeFormat).get

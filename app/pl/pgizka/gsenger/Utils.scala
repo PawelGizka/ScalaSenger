@@ -41,4 +41,7 @@ object Utils {
   def testChat(id: Long) = Chat(Some(ChatId(id)), None, None, None, ChatType.groupChat, None, inst)
 
   def testParticipant(userId: UserId, chatId: ChatId) = Participant(None, None, None, None, userId, chatId, None, None)
+
+  def testMessage(id: Long, sender: UserId, chatId: ChatId) =
+    Message(Some(MessageId(id)), None, None, None, chatId, sender, id, "message text " + id)
 }

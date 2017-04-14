@@ -13,23 +13,17 @@ import scala.Utils._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class UserControllerSpec extends ControllerSpec {
+class UserControllerSpec extends ControllerSpecWithDefaultScenario {
 
   val facebookService = mock[FacebookService]
   val userController = new UserController(this, facebookService)
 
+  import pl.pgizka.gsenger.startup.DefaultScenario._
+
   val loginRequest = UserFacebookLoginRequest(123, "device id 2", "gcm token 2", "facebook token 2")
 
-  before {
-    db.run(create()).futureValue
-  }
-
-  after {
-    db.run(drop()).futureValue
-  }
-
   "loginFacebookUser" should {
-    "return 200, new user id = 1 and access token when inserting new user" in {
+    "return 200, new user id = 2 and access token when inserting new user" in {
       val fbUser = FbUser("id", Some("email"), "firstName", "name", Some("gender"))
       when(facebookService.fetchFacebookUser(any[String])) thenReturn Future(Right(fbUser))
 
@@ -39,7 +33,7 @@ class UserControllerSpec extends ControllerSpec {
       status(response) must equal(200)
 
       val responseBody = contentAs[UserLoginRegistrationResponse](response)
-      responseBody.userId must equal(1)
+      responseBody.userId must equal(6)
     }
 
     "return 400 when there is problem with fetching facebook user" in {

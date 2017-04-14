@@ -17,10 +17,12 @@ class BasicSpecWithDefaultScenario extends BasicSpec {
   val createDefaultScenarioAction = DBIO.seq(
     schema.create,
     users ++= userTestData,
+    tokens ++= tokenTestData,
     devices ++= deviceTestData,
     contacts ++= contactTestData,
     chats ++= chatTestData,
-    participants ++= participantTestData
+    participants ++= participantTestData,
+    messages ++= messageTestData
   )
 
 }
