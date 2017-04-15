@@ -1,16 +1,11 @@
 package pl.pgizka.gsenger.model
 
-import java.time.Instant
-
 import pl.pgizka.gsenger.controllers.user.UserFacebookLoginRequest
 
 case class DeviceId(value: Long) extends EntityId(value)
 
 case class Device(
   id: Option[DeviceId],
-  version: Option[Version],
-  created: Option[Instant],
-  modified: Option[Instant],
 
   deviceId: String,
   appVersion: Option[String],
@@ -20,9 +15,6 @@ case class Device(
 
   def this(owner: User, userFacebookLoginRequest: UserFacebookLoginRequest) =
     this (
-      None,
-      None,
-      None,
       None,
 
       userFacebookLoginRequest.deviceId,

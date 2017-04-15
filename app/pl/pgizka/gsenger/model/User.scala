@@ -15,9 +15,6 @@ object UserId {
 
 case class User(
   id: Option[UserId],
-  version: Option[Version],
-  created: Option[Instant],
-  modified: Option[Instant],
 
   userName: Option[String],
   email: Option[String],
@@ -32,9 +29,6 @@ case class User(
 
   def this (fbUser: FbUser, userFacebookLoginRequest: UserFacebookLoginRequest) =
     this(
-      None,
-      None,
-      None,
       None,
 
       Some(fbUser.first_name + fbUser.name),

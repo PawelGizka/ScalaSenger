@@ -15,9 +15,6 @@ trait DeviceRepository extends EntityRepository {this: Profile with UserReposito
 
   class Devices(tag: Tag) extends Table[Device](tag, "Devices") with EntityTable[DeviceId, Device] {
     def id = column[DeviceId]("id", O.PrimaryKey, O.AutoInc)
-    def version = column[Version]("version", Nullable)
-    def created = column[Instant]("created", Nullable)
-    def modified = column[Instant]("modified", Nullable)
 
     def deviceId = column[String]("device_id")
     def appVersion = column[String]("app_version", Nullable)
@@ -27,13 +24,12 @@ trait DeviceRepository extends EntityRepository {this: Profile with UserReposito
 
     def owner = foreignKey("owner_id_fk", ownerId, users)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
 
-    def * = (id.?, version.?, created.?, modified.?, deviceId, appVersion.?, phoneNumber.?, gcmPushToken, ownerId) <> (Device.tupled, Device.unapply)
+    def * = (id.?, deviceId, appVersion.?, phoneNumber.?, gcmPushToken, ownerId) <> (Device.tupled, Device.unapply)
   }
 
   object devices extends EntityQueries[DeviceId, Device, Devices](new Devices(_)) {
 
-    override def copyEntityFields(entity: Device, id: Option[DeviceId], version: Option[Version], created: Option[Instant], modified: Option[Instant]): Device =
-      entity.copy(id = id, version = version, created = created, modified = modified)
+    override def copyEntityFields(entity: Device, id: Option[DeviceId]): Device = entity.copy(id = id)
 
     def findByDeviceId(deviceId: String): DBIO[Option[Device]] = devices.filter(_.deviceId === deviceId).result.headOption
 

@@ -3,7 +3,7 @@ package pl.pgizka.gsenger.persistance.impl
 import java.time.Instant
 
 import pl.pgizka.gsenger.controllers.user.UserFacebookLoginRequest
-import pl.pgizka.gsenger.model.{User, UserId, Version}
+import pl.pgizka.gsenger.model.{User, UserId}
 import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
 import pl.pgizka.gsenger.services.facebook.FbUser
 import slick.profile.SqlProfile.ColumnOption.Nullable
@@ -17,9 +17,6 @@ trait UserRepository extends EntityRepository {this: Profile =>
 
   class Users(tag: Tag) extends Table[User](tag, "Users") with EntityTable[UserId, User]{
     def id = column[UserId]("id", O.PrimaryKey, O.AutoInc)
-    def version = column[Version]("version", Nullable)
-    def created = column[Instant]("created", Nullable)
-    def modified = column[Instant]("modified", Nullable)
 
     def userName = column[String]("user_name", Nullable)
     def email = column[String]("email", Nullable)
@@ -31,13 +28,12 @@ trait UserRepository extends EntityRepository {this: Profile =>
     def facebookId = column[String]("facebook_id", Nullable)
     def facebookToken = column[String]("facebook_token", Nullable)
 
-    def * = (id.?, version.?, created.?, modified.?, userName.?, email.?, password.?, lastLoggedDate, active, photoHash.?, status.?, facebookId.?, facebookToken.?) <> (User.tupled, User.unapply)
+    def * = (id.?, userName.?, email.?, password.?, lastLoggedDate, active, photoHash.?, status.?, facebookId.?, facebookToken.?) <> (User.tupled, User.unapply)
   }
 
   object users extends EntityQueries[UserId, User, Users](new Users(_)) {
 
-    override def copyEntityFields(entity: User, id: Option[UserId], version: Option[Version], created: Option[Instant], modified: Option[Instant]): User =
-      entity.copy(id = id, version = version, created = created, modified = modified)
+    override def copyEntityFields(entity: User, id: Option[UserId]): User = entity.copy(id = id)
 
     def findByFacebookId(facebookId: String): DBIO[Option[User]] = users.filter(_.facebookId === facebookId).result.headOption
 
