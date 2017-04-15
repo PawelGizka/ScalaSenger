@@ -7,7 +7,6 @@ import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
 import java.util.Base64
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContext.Implicits.global
 
 trait TokenRepository extends EntityRepository {this: Profile with UserRepository =>
 
@@ -40,7 +39,7 @@ trait TokenRepository extends EntityRepository {this: Profile with UserRepositor
       new String(token).replaceAll("=", "")
     }
 
-    def findUser(token: String): DBIO[Option[User]] = {
+    def findUser(token: String)(implicit executionContext: ExecutionContext): DBIO[Option[User]] = {
       tokens.filter(_.token === token).result.headOption.flatMap{
         case Some(found) => users.find(found.userId)
         case None => DBIO.successful(None)

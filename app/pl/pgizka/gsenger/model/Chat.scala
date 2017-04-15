@@ -1,6 +1,5 @@
 package pl.pgizka.gsenger.model
 
-import java.time
 import java.time.Instant
 
 import pl.pgizka.gsenger.Utils.Js
@@ -15,9 +14,6 @@ object ChatId {
 
 case class Chat(
   id: Option[ChatId],
-  version: Option[Version],
-  created: Option[Instant],
-  modified: Option[Instant],
 
   chatType: String,
   name: Option[String],
@@ -26,9 +22,7 @@ case class Chat(
   def this(createChatRequest: CreateChatRequest) =
     this(
       None,
-      None,
-      None,
-      None,
+
       createChatRequest.chatType,
       createChatRequest.name,
       Instant.now()

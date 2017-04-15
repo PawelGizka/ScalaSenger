@@ -1,23 +1,17 @@
 package pl.pgizka.gsenger.persistance.impl
 
-import java.time.Instant
-
 import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
 import slick.profile.SqlProfile.ColumnOption.Nullable
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
+import scala.concurrent.ExecutionContext
 
 trait ParticipantRepository extends EntityRepository {this: ChatRepository with UserRepository with MessageRepository with Profile =>
   import profile.api._
 
   class Participants(tag: Tag) extends Table[Participant](tag, "Participants") with EntityTable[ParticipantId, Participant] {
     def id = column[ParticipantId]("id", O.PrimaryKey, O.AutoInc)
-    def version = column[Version]("version", Nullable)
-    def created = column[Instant]("created", Nullable)
-    def modified = column[Instant]("modified", Nullable)
 
     def userId = column[UserId]("user_id")
     def chatId = column[ChatId]("chat_id")
@@ -28,13 +22,12 @@ trait ParticipantRepository extends EntityRepository {this: ChatRepository with 
     def user = foreignKey("user_id_fk", userId, users)(_.id)
     def lastViewedMessage = foreignKey("last_viewed_message_fk", lastViewedMessageId, messages)(_.id)
 
-    def * = (id.?, version.?, created.?, modified.?, userId, chatId, lastViewedMessageId.?, lastViewedMessageDate.?) <> (Participant.tupled, Participant.unapply)
+    def * = (id.?, userId, chatId, lastViewedMessageId.?, lastViewedMessageDate.?) <> (Participant.tupled, Participant.unapply)
   }
 
   object participants extends EntityQueries[ParticipantId, Participant, Participants](new Participants(_)) {
 
-    override def copyEntityFields(entity: Participant, id: Option[ParticipantId], version: Option[Version], created: Option[Instant], modified: Option[Instant]): Participant =
-      entity.copy(id = id, version = version, created = created, modified = modified)
+    override def copyEntityFields(entity: Participant, id: Option[ParticipantId]): Participant = entity.copy(id = id)
 
     def insertFromCreateChatRequest(createChatRequest: CreateChatRequest, chat: Chat, user: User): DBIO[Seq[Participant]] = {
       val participantsIds = (createChatRequest.participants :+ user.idValue).distinct
@@ -44,7 +37,7 @@ trait ParticipantRepository extends EntityRepository {this: ChatRepository with 
     def isUserParticipant(chatId: ChatId, userId: UserId): DBIO[Boolean] =
       findAllParticipantsQuery(chatId).filter(_.userId === userId).exists.result
 
-    def findAllParticipants(chats: Seq[Chat]): DBIO[Seq[(Chat, Seq[Participant])]]= {
+    def findAllParticipants(chats: Seq[Chat])(implicit executionContext: ExecutionContext): DBIO[Seq[(Chat, Seq[Participant])]]= {
       DBIO.sequence(chats.map(chat => findAllParticipants(chat.id.get).map(participantsFound =>(chat, participantsFound))))
     }
 

@@ -6,7 +6,7 @@ import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
 import slick.profile.SqlProfile.ColumnOption.Nullable
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 trait ChatRepository extends EntityRepository {this: ParticipantRepository with Profile =>
 
@@ -14,23 +14,19 @@ trait ChatRepository extends EntityRepository {this: ParticipantRepository with 
 
   class Chats(tag: Tag) extends Table[Chat](tag, "Chats") with EntityTable[ChatId, Chat] {
     def id = column[ChatId]("id", O.PrimaryKey, O.AutoInc)
-    def version = column[Version]("version", Nullable)
-    def created = column[Instant]("created", Nullable)
-    def modified = column[Instant]("modified", Nullable)
 
     def chatType = column[String]("type")
     def name = column[String]("name", Nullable)
     def started = column[Instant]("started")
 
-    def * = (id.?, version.?, created.?, modified.?, chatType, name.?, started) <> (Chat.tupled, Chat.unapply)
+    def * = (id.?, chatType, name.?, started) <> (Chat.tupled, Chat.unapply)
   }
 
   object chats extends EntityQueries[ChatId, Chat, Chats](new Chats(_)) {
 
-    override def copyEntityFields(entity: Chat, id: Option[ChatId], version: Option[Version], created: Option[Instant], modified: Option[Instant]): Chat =
-      entity.copy(id = id, version = version, created = created, modified = modified)
+    override def copyEntityFields(entity: Chat, id: Option[ChatId]): Chat = entity.copy(id = id)
 
-    def findAllChats(userId: UserId): DBIO[Seq[Chat]] = {
+    def findAllChats(userId: UserId)(implicit executionContext: ExecutionContext): DBIO[Seq[Chat]] = {
       (for {
         participant <- participants
         if participant.userId === userId

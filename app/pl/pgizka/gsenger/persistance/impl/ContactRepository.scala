@@ -10,8 +10,7 @@ import slick.lifted.PrimaryKey
 
 import scala.collection.mutable
 import scala.collection.mutable.Map
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 
 trait ContactRepository {this: UserRepository with DeviceRepository with Profile =>
 
@@ -45,7 +44,8 @@ trait ContactRepository {this: UserRepository with DeviceRepository with Profile
       } yield (friend, contact)
     }
 
-    def updateContacts(userFrom: User, fbUsers: Option[Seq[FbUser]], phoneNumbers: Seq[Int]): DBIO[Seq[(User, Contact)]] = {
+    def updateContacts(userFrom: User, fbUsers: Option[Seq[FbUser]], phoneNumbers: Seq[Int])
+                      (implicit executionContext: ExecutionContext): DBIO[Seq[(User, Contact)]] = {
       for {
         existingContacts <- findContacts(userFrom)
         foundPhoneFriends <- devices.findFriendsByPhoneNumbers(phoneNumbers)
@@ -88,7 +88,7 @@ trait ContactRepository {this: UserRepository with DeviceRepository with Profile
 
     def bulkInsertOrUpdate(rows: Iterable[Contact]): DBIO[Iterable[Int]] = DBIO.sequence(rows.map(contacts.insertOrUpdate(_)))
 
-    def ensureEverybodyKnowsEachOther(participants: Seq[Participant]) = {
+    def ensureEverybodyKnowsEachOther(participants: Seq[Participant])(implicit executionContext: ExecutionContext) = {
       val rows: Seq[DBIO[Seq[Contact]]] = participants.map{participant =>
         findContacts(participant.user).map{actual =>
           getNotFoundElements(participants.map(_.user), actual.map(_._1.id.get)).map{ userId =>

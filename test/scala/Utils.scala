@@ -18,20 +18,19 @@ object Utils {
 
   def testUserWithToken(id: Long): (User, Token) = (testUser(id), testUserToken(UserId(id)))
 
-  def testUser(id: Long)  = User(Some(UserId(id)), Some(Version(0)), Some(inst), Some(inst), Some("user name " + id), Some("email " + id),
+  def testUser(id: Long)  = User(Some(UserId(id)), Some("user name " + id), Some("email " + id),
     Some("password " + id), inst.toEpochMilli, false, None, None, Some("facebook id " + id), Some("facebook token " + id))
 
   def testUserToken(id: UserId) = Token("some token " + id.value, id)
 
-  def testDevice(id: Long, owner: User) = Device(Some(DeviceId(id)), Some(Version(0)),
-    Some(inst), Some(inst), "device id " + id, None, Some((id * 100).toInt), "gcm token " + id, owner.id.get)
+  def testDevice(id: Long, owner: User) = Device(Some(DeviceId(id)), "device id " + id, None, Some((id * 100).toInt), "gcm token " + id, owner.id.get)
 
-  def testChat(id: Long) = Chat(Some(ChatId(id)), None, None, None, ChatType.groupChat, None, inst)
+  def testChat(id: Long) = Chat(Some(ChatId(id)), ChatType.groupChat, None, inst)
 
-  def testParticipant(userId: UserId, chatId: ChatId) = Participant(None, None, None, None, userId, chatId, None, None)
+  def testParticipant(userId: UserId, chatId: ChatId) = Participant(None, userId, chatId, None, None)
 
   def testMessage(id: Long, sender: UserId, chatId: ChatId) =
-    Message(Some(MessageId(id)), None, None, None, chatId, sender, id, "message text " + id)
+    Message(Some(MessageId(id)), chatId, sender, id, "message text " + id)
 
   def contentAsErrorResponse: (Future[Result]) => ErrorResponse = contentAs[ErrorResponse]
 
