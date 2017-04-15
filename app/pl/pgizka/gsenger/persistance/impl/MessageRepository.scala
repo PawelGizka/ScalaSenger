@@ -5,7 +5,9 @@ import java.time.Instant
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
 import slick.profile.SqlProfile.ColumnOption.Nullable
-import scala.concurrent.ExecutionContext.Implicits.global
+
+import scala.concurrent.ExecutionContext
+
 
 trait MessageRepository extends EntityRepository {this: ChatRepository with UserRepository with Profile =>
 
@@ -30,7 +32,7 @@ trait MessageRepository extends EntityRepository {this: ChatRepository with User
     override def copyEntityFields(entity: Message, id: Option[MessageId]): Message =
       entity.copy(id = id)
 
-    def insert(chatId: ChatId, senderId: UserId, text: String): DBIO[Message] = {
+    def insert(chatId: ChatId, senderId: UserId, text: String)(implicit executionContext: ExecutionContext): DBIO[Message] = {
       val lastMessages: DBIO[Seq[Message]] = messages.filter(_.chatId === chatId).sortBy(_.number.desc).take(1).result
 
       lastMessages.flatMap{lastMessages =>

@@ -6,18 +6,17 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.libs.ws.ning.NingWSClient
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait FacebookService {
-  def fetchFacebookUser(facebookToken: String): Future[Either[String, FbUser]]
+  def fetchFacebookUser(facebookToken: String)(implicit executionContext: ExecutionContext): Future[Either[String, FbUser]]
 
-  def fetchFacebookFriends(facebookToken: String): Future[Either[String, Seq[FbUser]]]
+  def fetchFacebookFriends(facebookToken: String)(implicit executionContext: ExecutionContext): Future[Either[String, Seq[FbUser]]]
 }
 
 object realFacebookService extends FacebookService {
 
-  override def fetchFacebookUser(facebookToken: String): Future[Either[String, FbUser]] =
+  override def fetchFacebookUser(facebookToken: String)(implicit executionContext: ExecutionContext): Future[Either[String, FbUser]] =
     fetchFacebookData(facebookToken, "me").map { wsResponse => {
       if (200 <= wsResponse.status && wsResponse.status <= 299) {
         Right (Json.parse(wsResponse.body).as[FbUser](Json.format[FbUser]))
@@ -26,7 +25,7 @@ object realFacebookService extends FacebookService {
       }
   }}
 
-  override def fetchFacebookFriends(facebookToken: String): Future[Either[String, Seq[FbUser]]] =
+  override def fetchFacebookFriends(facebookToken: String)(implicit executionContext: ExecutionContext): Future[Either[String, Seq[FbUser]]] =
     fetchFacebookData(facebookToken, "me/friends").map { wsResponse => {
       if (200 <= wsResponse.status && wsResponse.status <= 299) {
         implicit val fbUserFormat = Json.format[FbUser]

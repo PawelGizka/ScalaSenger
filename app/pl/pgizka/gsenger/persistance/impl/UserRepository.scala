@@ -9,7 +9,7 @@ import pl.pgizka.gsenger.services.facebook.FbUser
 import slick.profile.SqlProfile.ColumnOption.Nullable
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContext.Implicits.global
+//import scala.concurrent.ExecutionContext.Implicits.global
 
 trait UserRepository extends EntityRepository {this: Profile =>
 
@@ -37,7 +37,7 @@ trait UserRepository extends EntityRepository {this: Profile =>
 
     def findByFacebookId(facebookId: String): DBIO[Option[User]] = users.filter(_.facebookId === facebookId).result.headOption
 
-    def findByFacebookUsers(facebookUsers: Option[Seq[FbUser]]): DBIO[Option[Seq[User]]] = facebookUsers match {
+    def findByFacebookUsers(facebookUsers: Option[Seq[FbUser]])(implicit executionContext: ExecutionContext): DBIO[Option[Seq[User]]] = facebookUsers match {
       case Some(users) => findByFacebookUsers(users).map(Some(_))
       case None => DBIO.successful(None)
     }

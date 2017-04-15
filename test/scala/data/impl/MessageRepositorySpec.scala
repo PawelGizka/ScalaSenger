@@ -1,7 +1,7 @@
 package scala.data.impl
 
 import scala.data.BasicSpecWithDefaultScenario
-
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class MessageRepositorySpec extends BasicSpecWithDefaultScenario {
 

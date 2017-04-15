@@ -6,7 +6,7 @@ import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
 import slick.profile.SqlProfile.ColumnOption.Nullable
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 trait ChatRepository extends EntityRepository {this: ParticipantRepository with Profile =>
 
@@ -26,7 +26,7 @@ trait ChatRepository extends EntityRepository {this: ParticipantRepository with 
 
     override def copyEntityFields(entity: Chat, id: Option[ChatId]): Chat = entity.copy(id = id)
 
-    def findAllChats(userId: UserId): DBIO[Seq[Chat]] = {
+    def findAllChats(userId: UserId)(implicit executionContext: ExecutionContext): DBIO[Seq[Chat]] = {
       (for {
         participant <- participants
         if participant.userId === userId
