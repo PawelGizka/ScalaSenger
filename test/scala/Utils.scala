@@ -2,7 +2,7 @@ package scala
 
 import java.time.{LocalDateTime, ZoneOffset}
 
-import pl.pgizka.gsenger.ErrorResponse
+import pl.pgizka.gsenger.controllers.RestApiErrorResponse
 import pl.pgizka.gsenger.model._
 import play.api.libs.json.{Json, OFormat}
 import play.api.mvc.Result
@@ -32,7 +32,7 @@ object Utils {
   def testMessage(id: Long, sender: UserId, chatId: ChatId) =
     Message(Some(MessageId(id)), chatId, sender, id, "message text " + id)
 
-  def contentAsErrorResponse: (Future[Result]) => ErrorResponse = contentAs[ErrorResponse]
+  def contentAsErrorResponse: (Future[Result]) => RestApiErrorResponse = contentAs[RestApiErrorResponse]
 
   def contentAs[A](response: Future[Result])(implicit typeFormat: OFormat[A]) = Json.fromJson(contentAsJson(response))(typeFormat).get
 }

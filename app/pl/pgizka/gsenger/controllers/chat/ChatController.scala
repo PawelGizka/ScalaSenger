@@ -1,6 +1,7 @@
 package pl.pgizka.gsenger.controllers.chat
 
 import java.time.Instant
+import java.util.concurrent.TimeUnit
 
 import pl.pgizka.gsenger.Utils._
 import pl.pgizka.gsenger.actors.ChatManagerActor
@@ -12,9 +13,11 @@ import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.startup.boot
 import pl.pgizka.gsenger.Error
+import pl.pgizka.gsenger.model.Chat._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Action
 import akka.pattern.{ask, pipe}
+import akka.util.Timeout
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -26,6 +29,8 @@ class ChatController(override val dataAccess: DAL with DatabaseSupport) extends 
 
   def createChat: Action[JsValue] = Authenticate.async(parse.json) { request =>
     val createChatRequest = request.body.as[CreateChatRequest]
+
+    implicit val timeout = Timeout(5, TimeUnit.MINUTES) //TODO replace with global timeout
 
     val chatManagerActor = boot.actorSystem.actorOf(ChatManagerActor.props(boot)) //TODO Replace with injected actorRef
 

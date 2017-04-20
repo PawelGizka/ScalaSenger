@@ -20,7 +20,7 @@ trait ChatRepository extends EntityRepository {this: ParticipantRepository with 
     def name = column[String]("name", Nullable)
     def started = column[Instant]("started")
 
-    def * = (id.?, chatType, name.?, started) <> (Chat.tupled, Chat.unapply)
+    def * = (id.?, chatType, name.?, started) <> ((Chat.apply _).tupled, Chat.unapply)
   }
 
   object chats extends EntityQueries[ChatId, Chat, Chats](new Chats(_)) {
@@ -35,7 +35,8 @@ trait ChatRepository extends EntityRepository {this: ParticipantRepository with 
       } yield chat).result
     }
 
-    def insertFromRequest(createChatRequest: CreateChatRequest, user: User): DBIO[Chat] = (for {
+    def insertFromRequest(createChatRequest: CreateChatRequest, user: User)
+                         (implicit executionContext: ExecutionContext): DBIO[Chat] = (for {
       chat <- chats.insert(new Chat(createChatRequest))
       participants <- participants.insertFromCreateChatRequest(createChatRequest, chat, user)
       _ <- contacts.ensureEverybodyKnowsEachOther(participants)

@@ -1,11 +1,18 @@
 package pl.pgizka.gsenger.controllers.message
 
-import pl.pgizka.gsenger.ErrorResponse
+import java.util.concurrent.TimeUnit
+
 import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
+import akka.pattern._
+import akka.util.Timeout
+import pl.pgizka.gsenger.Error
 import pl.pgizka.gsenger.errors._
-import pl.pgizka.gsenger.ErrorResponse._
+import pl.pgizka.gsenger.actors.ChatActor
+import pl.pgizka.gsenger.actors.ChatActor.CreateNewMessage
+import pl.pgizka.gsenger.model.{Chat, Message}
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
+import pl.pgizka.gsenger.startup.boot
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Action
 
@@ -21,16 +28,15 @@ class MessageController(override val dataAccess: DAL with DatabaseSupport) exten
   def createMessage: Action[JsValue] = Authenticate.async(parse.json) { request =>
     val createMessageRequest = request.body.as[CreateMessageRequest]
 
+    implicit val actorSystem = boot.actorSystem
+    implicit val timeout = Timeout(5, TimeUnit.MINUTES) //TODO replace with global timeout
+
     def tryInsert = {
-      db.run(participants.isUserParticipant(createMessageRequest.chatId, request.user.id.get)).flatMap { hasAccess =>
-        if (hasAccess) {
-          db.run(messages.insert(createMessageRequest.chatId, request.user.id.get, createMessageRequest.text).transactionally).map { message =>
-            Ok(Json.toJson(message))
-          } recover databaseError
-        } else {
-          Future(Forbidden)
-        }
-      } recover databaseError
+      ChatActor.actorSelection(createMessageRequest.chatId) ? CreateNewMessage(request.user.id.get, createMessageRequest) map {
+        case message: Message => Ok(Json.toJson(message))
+        case error: Error => BadRequest(Json.toJson(new RestApiErrorResponse(error)))
+        case e => BadRequest
+      } recover actorAskError
     }
 
     db.run(chats.find(createMessageRequest.chatId)).flatMap{

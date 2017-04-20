@@ -1,7 +1,7 @@
 package pl.pgizka.gsenger.actors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
-import pl.pgizka.gsenger.model.{Chat, ChatId, User, UserId}
+import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.startup.boot
@@ -11,11 +11,8 @@ import pl.pgizka.gsenger.actors.ChatManagerActor.{ChatCreated, ChatsLoaded, Crea
 import pl.pgizka.gsenger.controllers.RestApiErrorResponse
 import pl.pgizka.gsenger.controllers.chat.{CreateChatRequest, CreateChatResponse}
 import pl.pgizka.gsenger.errors.{CouldNotFindUsersError, DatabaseError}
-import pl.pgizka.gsenger.Error
-import play.api.libs.json.Json
-import play.api.libs.json.Json.toJson
-import play.api.mvc.Result
 
+import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 
@@ -50,19 +47,19 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport) extends Actor with 
 
     case CreateNewChat(createChatRequest, user) =>
       val sender = context.sender() //cache sender in val in order to not close over context.sender()
-      db.run(users.find(createChatRequest.participants.map(new UserId(_)))).map{foundUsers =>
+      db.run(users.find(createChatRequest.participants.map(new UserId(_)))).flatMap{foundUsers =>
         val allSpecifiedUsersExists = foundUsers.size == createChatRequest.participants.size
-
         if (allSpecifiedUsersExists) {
-          db.run(chats.insertFromRequest(createChatRequest, user)) onComplete {
-            case Success(chat) ⇒ self ! ChatCreated(chat, createChatRequest, sender)
-            case Failure(f) ⇒ sender ! DatabaseError(f.getMessage)
-          }
+          db.run(chats.insertFromRequest(createChatRequest, user))
         } else {
           val notFoundIds = getNotFoundElements(createChatRequest.participants, foundUsers.map(_.id.get.value))
           val errorMessage = formatSequenceMessage("Not found users ids: ", notFoundIds)
-          sender ! CouldNotFindUsersError(errorMessage)
+          Future(CouldNotFindUsersError(errorMessage))
         }
+      } onComplete {
+        case Success(chat: Chat) ⇒ self ! ChatCreated(chat, createChatRequest, sender)
+        case Success(error) => sender ! error
+        case Failure(throwable) => sender ! DatabaseError(throwable.getMessage)
       }
 
     case ChatCreated(chat, createChatRequest, sender) =>
@@ -73,6 +70,7 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport) extends Actor with 
   }
 
   private def createChatActor(chat: Chat) =
+    //TODO provide all necessary arguments for chat initialization
     context.actorOf(ChatActor.props(chat.id.get, dataAccess), ChatActor.actorName(chat.id.get))
 
 

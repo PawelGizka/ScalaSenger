@@ -29,6 +29,10 @@ case class Chat(
     )
 }
 
+object Chat {
+  implicit val chatFormat: Js[Chat] = Json.format[Chat]
+}
+
 object ChatType {
   val singleChat = "singleChat"
   val groupChat = "groupChat"

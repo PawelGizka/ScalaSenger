@@ -1,6 +1,5 @@
 package pl.pgizka.gsenger.controllers.user
 
-import pl.pgizka.gsenger.ErrorResponse
 import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
 import pl.pgizka.gsenger.controllers.user._
 import pl.pgizka.gsenger.core._

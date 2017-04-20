@@ -43,6 +43,10 @@ trait MessageRepository extends EntityRepository {this: ChatRepository with User
         }
       }
     }
+
+    def findAllMessages(chatId: ChatId): DBIO[Seq[Message]] = {
+      messages.filter(_.chatId === chatId).result
+    }
   }
 
 }
