@@ -2,7 +2,7 @@ package scala.controllers
 
 import pl.pgizka.gsenger.Utils.formatSequenceMessage
 import pl.pgizka.gsenger.controllers.chat.{ChatController, CreateChatRequest, CreateChatResponse, ListAllChatsWithParticipantInfoResponse}
-import pl.pgizka.gsenger.controllers.errors._
+import pl.pgizka.gsenger.errors._
 import pl.pgizka.gsenger.model.ChatType
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result

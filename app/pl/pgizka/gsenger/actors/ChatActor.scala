@@ -3,13 +3,12 @@ package pl.pgizka.gsenger.actors
 import akka.actor.{Actor, Props}
 import akka.pattern._
 import akka.actor.Actor.Receive
-import pl.pgizka.gsenger.actors.ChatActor.{AccessInformationObtained, ForbiddenResponse, NewMessage, ParticipantsLoaded}
+import pl.pgizka.gsenger.actors.ChatActor.{AccessInformationObtained, CreateNewMessage, ParticipantsLoaded}
 import pl.pgizka.gsenger.controllers.message.CreateMessageRequest
+import pl.pgizka.gsenger.errors.Forbidden
 import pl.pgizka.gsenger.model.{ChatId, Message, Participant, UserId}
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 object ChatActor {
 
@@ -19,10 +18,7 @@ object ChatActor {
   case class ParticipantsLoaded(participants: Seq[Participant])
   case class AccessInformationObtained(sender: UserId, hasAccess: Boolean, createMessageRequest: CreateMessageRequest)
 
-  case class NewMessage(sender: UserId, createMessageRequest: CreateMessageRequest)
-
-  object ForbiddenResponse
-  case class MessageCreatedResponse(message: Message)
+  case class CreateNewMessage(sender: UserId, createMessageRequest: CreateMessageRequest)
 }
 
 
@@ -30,6 +26,8 @@ class ChatActor(chatId: ChatId, dataAccess: DAL with DatabaseSupport) extends Ac
 
   import dataAccess._
   import profile.api._
+
+  implicit val executionContext = context.dispatcher
 
   var participantsList: List[Participant] = List()
   var messagesList: List[Message] = List()
@@ -45,16 +43,16 @@ class ChatActor(chatId: ChatId, dataAccess: DAL with DatabaseSupport) extends Ac
       println("participants size " + participants.size)
       participantsList = participants.toList
 
-    case NewMessage(sender, createMessageRequest) =>
+    case CreateNewMessage(sender, createMessageRequest) =>
       db.run(participants.isUserParticipant(createMessageRequest.chatId, sender)).map{hasAccess =>
-        self forward AccessInformationObtained(sender, hasAccess, createMessageRequest)
-      }
+        AccessInformationObtained(sender, hasAccess, createMessageRequest)
+      }  pipeTo self
 
     case AccessInformationObtained(senderId, hasAccess, createMessageRequest) =>
       if (hasAccess) {
         db.run(messages.insert(createMessageRequest.chatId, senderId, createMessageRequest.text)) pipeTo sender()
       } else {
-        sender() ! ForbiddenResponse
+        sender() ! Forbidden
       }
 
   }

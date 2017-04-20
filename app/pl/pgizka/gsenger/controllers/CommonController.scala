@@ -1,6 +1,8 @@
 package pl.pgizka.gsenger.controllers
 
-import pl.pgizka.gsenger.controllers.errors._
+import akka.pattern.AskTimeoutException
+import pl.pgizka.gsenger.actors.ChatManagerActor
+import pl.pgizka.gsenger.errors._
 import pl.pgizka.gsenger.model.User
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
@@ -36,7 +38,12 @@ class CommonController(val dataAccess: DAL with DatabaseSupport) extends Control
   }
 
   def databaseError: PartialFunction[scala.Throwable, Result] = {
-    case e => BadRequest(toJson(new ErrorResponse(DatabaseError, e.getMessage)))
+    case e => BadRequest(toJson(new RestApiErrorResponse(DatabaseError(e.getMessage))))
+  }
+
+  def actorAskError: PartialFunction[scala.Throwable, Result] = {
+    case e: AskTimeoutException => BadRequest(toJson(new RestApiErrorResponse(ActorAskTimeout(e.getMessage))))
+    case _ => BadRequest
   }
 
 }

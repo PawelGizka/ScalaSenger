@@ -1,9 +1,10 @@
 package pl.pgizka.gsenger.controllers.user
 
-import pl.pgizka.gsenger.controllers.{CommonController, ErrorResponse}
+import pl.pgizka.gsenger.ErrorResponse
+import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
 import pl.pgizka.gsenger.controllers.user._
 import pl.pgizka.gsenger.core._
-import pl.pgizka.gsenger.controllers.errors._
+import pl.pgizka.gsenger.errors._
 import pl.pgizka.gsenger.model.{Contact, User}
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
@@ -36,7 +37,7 @@ class UserController(override val dataAccess: DAL with DatabaseSupport, val face
         } recover databaseError
       }
 
-      case Left(errorInfo) => Future(BadRequest(toJson(new ErrorResponse(FetchFacebookDataError, errorInfo))))
+      case Left(errorInfo) => Future(BadRequest(toJson(new RestApiErrorResponse(FetchFacebookDataError(errorInfo)))))
     }
   }
 

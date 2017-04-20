@@ -1,8 +1,9 @@
 package pl.pgizka.gsenger.controllers.message
 
-import pl.pgizka.gsenger.controllers.{CommonController, ErrorResponse}
-import pl.pgizka.gsenger.controllers.errors._
-import pl.pgizka.gsenger.controllers.ErrorResponse._
+import pl.pgizka.gsenger.ErrorResponse
+import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
+import pl.pgizka.gsenger.errors._
+import pl.pgizka.gsenger.ErrorResponse._
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import play.api.libs.json.{JsValue, Json}
@@ -34,7 +35,7 @@ class MessageController(override val dataAccess: DAL with DatabaseSupport) exten
 
     db.run(chats.find(createMessageRequest.chatId)).flatMap{
       case Some(_) => tryInsert
-      case None => Future(NotFound(Json.toJson(new ErrorResponse(CouldNotFindChatError))))
+      case None => Future(NotFound(Json.toJson(new RestApiErrorResponse(CouldNotFindChatError))))
     }
 
 
