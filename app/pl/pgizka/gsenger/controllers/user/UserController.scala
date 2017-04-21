@@ -1,5 +1,6 @@
 package pl.pgizka.gsenger.controllers.user
 
+import pl.pgizka.gsenger.actors.WebSocketActor
 import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
 import pl.pgizka.gsenger.controllers.user._
 import pl.pgizka.gsenger.core._
@@ -10,6 +11,7 @@ import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.services.facebook.FacebookService
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.{JsValue, Json}
+import play.api.libs.streams.ActorFlow
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext.Implicits._
@@ -57,6 +59,10 @@ class UserController(override val dataAccess: DAL with DatabaseSupport, val face
     list.map {users =>
       Ok(Json.toJson(GetFriendsResponse(users)))
     } recover databaseError
+  }
+
+  def socket = WebSocket.accept[String, String] { request =>
+    ActorFlow.actorRef(out => WebSocketActor.props(out))
   }
 
 }
