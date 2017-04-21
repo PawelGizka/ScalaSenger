@@ -3,7 +3,6 @@ package pl.pgizka.gsenger.controllers.user
 import pl.pgizka.gsenger.actors.WebSocketActor
 import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
 import pl.pgizka.gsenger.controllers.user._
-import pl.pgizka.gsenger.core._
 import pl.pgizka.gsenger.errors._
 import pl.pgizka.gsenger.model.{Contact, User}
 import pl.pgizka.gsenger.persistance.DatabaseSupport
@@ -61,8 +60,8 @@ class UserController(override val dataAccess: DAL with DatabaseSupport, val face
     } recover databaseError
   }
 
-  def socket = WebSocket.accept[String, String] { request =>
-    ActorFlow.actorRef(out => WebSocketActor.props(out))
-  }
+//  def socket = WebSocket.accept[String, String] { request =>
+//    ActorFlow.actorRef(out => WebSocketActor.props(out))
+//  }
 
 }

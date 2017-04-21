@@ -2,6 +2,7 @@ package pl.pgizka.gsenger.controllers.message
 
 import java.util.concurrent.TimeUnit
 
+import akka.actor.ActorSystem
 import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
 import akka.pattern._
 import akka.util.Timeout
@@ -20,7 +21,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class MessageController(override val dataAccess: DAL with DatabaseSupport) extends CommonController(dataAccess) {
+class MessageController(override val dataAccess: DAL with DatabaseSupport, implicit val actorSystem: ActorSystem) extends CommonController(dataAccess) {
 
   import dataAccess._
   import profile.api._
@@ -28,7 +29,6 @@ class MessageController(override val dataAccess: DAL with DatabaseSupport) exten
   def createMessage: Action[JsValue] = Authenticate.async(parse.json) { request =>
     val createMessageRequest = request.body.as[CreateMessageRequest]
 
-    implicit val actorSystem = boot.actorSystem
     implicit val timeout = Timeout(5, TimeUnit.MINUTES) //TODO replace with global timeout
 
     def tryInsert = {

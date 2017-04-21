@@ -36,11 +36,11 @@ trait ChatRepository extends EntityRepository {this: ParticipantRepository with 
     }
 
     def insertFromRequest(createChatRequest: CreateChatRequest, user: User)
-                         (implicit executionContext: ExecutionContext): DBIO[Chat] = (for {
+                         (implicit executionContext: ExecutionContext): DBIO[Chat, Seq[Participant]] = (for {
       chat <- chats.insert(new Chat(createChatRequest))
       participants <- participants.insertFromCreateChatRequest(createChatRequest, chat, user)
       _ <- contacts.ensureEverybodyKnowsEachOther(participants)
-    } yield chat).transactionally
+    } yield (chat, participants)).transactionally
 
   }
 }

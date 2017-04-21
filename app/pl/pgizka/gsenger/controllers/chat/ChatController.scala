@@ -3,11 +3,10 @@ package pl.pgizka.gsenger.controllers.chat
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
+import akka.actor.{ActorRef, ActorSystem}
 import pl.pgizka.gsenger.Utils._
 import pl.pgizka.gsenger.actors.ChatManagerActor
 import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
-import pl.pgizka.gsenger.core._
-import pl.pgizka.gsenger.errors.CouldNotFindUsersError
 import pl.pgizka.gsenger.model.{Chat, User, UserId}
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
@@ -18,12 +17,15 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Action
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
+import play.api.libs.concurrent.Akka
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class ChatController(override val dataAccess: DAL with DatabaseSupport) extends CommonController(dataAccess) {
+class ChatController(override val dataAccess: DAL with DatabaseSupport,
+                     implicit val actorSystem: ActorSystem,
+                     chatManager: ActorRef) extends CommonController(dataAccess) {
   import dataAccess._
   import profile.api._
 
@@ -32,9 +34,7 @@ class ChatController(override val dataAccess: DAL with DatabaseSupport) extends 
 
     implicit val timeout = Timeout(5, TimeUnit.MINUTES) //TODO replace with global timeout
 
-    val chatManagerActor = boot.actorSystem.actorOf(ChatManagerActor.props(boot)) //TODO Replace with injected actorRef
-
-    chatManagerActor ? ChatManagerActor.CreateNewChat(createChatRequest, request.user) map {
+    chatManager ? ChatManagerActor.CreateNewChat(createChatRequest, request.user) map {
       case chat: Chat => Ok(Json.toJson(chat))
       case error: Error => BadRequest(Json.toJson(new RestApiErrorResponse(error)))
       case e => BadRequest

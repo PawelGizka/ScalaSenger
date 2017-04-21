@@ -32,6 +32,8 @@ trait ContactRepository {this: UserRepository with DeviceRepository with Profile
 
   object contacts extends TableQuery(new Contacts(_)) {
 
+    def list(): DBIO[Seq[Contact]] = contacts.result
+
     def findContacts(user: User): DBIO[Seq[(User, Contact)]] = findContacts(user.id.get)
 
     def findContacts(userId: UserId): DBIO[Seq[(User, Contact)]] = findContactsQuery(userId).result

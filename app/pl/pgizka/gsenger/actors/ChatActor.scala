@@ -13,7 +13,11 @@ import scala.util.{Failure, Success}
 
 object ChatActor {
 
-  def props(chatId: ChatId, dataAccess: DAL with DatabaseSupport): Props = Props(classOf[ChatActor], chatId, dataAccess)
+  def props(chatId: ChatId,
+            dataAccess: DAL with DatabaseSupport,
+            participantsLoaded: Seq[Participant],
+            messagesLoaded: Seq[Message]): Props = Props(classOf[ChatActor], chatId, dataAccess, participantsLoaded, messagesLoaded)
+
   def actorName(chatId: ChatId): String = s"chat-$chatId"
 
   def actorSelection(chatId: ChatId)(implicit actorSystem: ActorSystem): ActorSelection =
@@ -27,8 +31,8 @@ object ChatActor {
 
 class ChatActor(chatId: ChatId, dataAccess:
                 DAL with DatabaseSupport,
-                participantsLoaded: Map[ChatId, Seq[Participant]],
-                messagesLoaded: Map[ChatId, Seq[Message]]) extends Actor with ActorLogging {
+                participantsLoaded: Seq[Participant],
+                messagesLoaded: Seq[Message]) extends Actor with ActorLogging {
 
   import dataAccess._
   import profile.api._
@@ -40,8 +44,8 @@ class ChatActor(chatId: ChatId, dataAccess:
 
   @scala.throws[Exception](classOf[Exception])
   override def preStart(): Unit = {
-    participantsMap = Map(participantsLoaded(chatId).map(participant => (participant.user, participant)): _*)
-    messagesList = messagesLoaded(chatId).toList
+    participantsMap = Map(participantsLoaded.map(participant => (participant.user, participant)): _*)
+    messagesList = messagesLoaded.toList
   }
 
   override def receive: Receive = {

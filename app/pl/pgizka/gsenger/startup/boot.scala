@@ -1,7 +1,8 @@
 package pl.pgizka.gsenger.startup
 
-import akka.actor.{ActorSystem, Props}
-import pl.pgizka.gsenger.actors.ChatActor
+import akka.actor.{ActorRef, ActorSystem, Props}
+import pl.pgizka.gsenger.actors.{ChatActor, ChatManagerActor}
+import pl.pgizka.gsenger.model.ChatId
 import pl.pgizka.gsenger.persistance.H2DBConnector
 import pl.pgizka.gsenger.persistance.impl.DAL
 
@@ -9,38 +10,40 @@ import scala.concurrent.{Await, Awaitable}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 
+object boot extends H2DBConnector with DAL {
 
-object boot extends App with H2DBConnector with DAL {
+  case class StartupResult(chatManager: ActorRef)
 
   import profile.api._
-
   await(db.run(create()))
 
-  val actorSystem = ActorSystem("ScalaSengerActorSystem")
+  def start(actorSystem: ActorSystem): StartupResult = {
+    println("hello from start")
 
-  import DefaultScenario._
+    import DefaultScenario._
 
-  val createDefaultScenarioAction = DBIO.seq(
-    users ++= userTestData,
-    devices ++= deviceTestData,
-    contacts ++= contactTestData,
-    chats ++= chatTestData,
-    participants ++= participantTestData
-  )
+    val createDefaultScenarioAction = DBIO.seq(
+      users ++= userTestData,
+      devices ++= deviceTestData,
+      contacts ++= contactTestData,
+      chats ++= chatTestData,
+      participants ++= participantTestData,
+      messages ++= messageTestData
+    )
 
-  await(db.run(createDefaultScenarioAction))
+    await(db.run(createDefaultScenarioAction))
 
-  actorSystem.actorSelection("/user/chat1")
+    val initialData = await(InitialData.load(this))
 
-  db.run(chats.list()).map{chats =>
-    val chatActors = chats.map(chat => actorSystem.actorOf(ChatActor.props(chat.id.get, boot), ChatActor.actorName(chat.id.get)))
-    chatActors foreach(actor => println(actor.path.parent.parent.name))
+    val chatManager = actorSystem.actorOf(ChatManagerActor.props(boot, initialData))
 
+    StartupResult(chatManager)
   }
 
   def await[T](awaitable: Awaitable[T]): T = {
     Await.result(awaitable, Duration.Inf)
   }
+
 
 }
 

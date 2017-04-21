@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
-import pl.pgizka.gsenger.startup.boot
+import pl.pgizka.gsenger.startup.{InitialData, boot}
 import akka.pattern._
 import pl.pgizka.gsenger.Utils.{formatSequenceMessage, getNotFoundElements}
 import pl.pgizka.gsenger.actors.ChatManagerActor.{ChatCreated, ChatsLoaded, CreateNewChat}
@@ -18,17 +18,19 @@ import scala.util.{Failure, Success}
 
 object ChatManagerActor {
 
-  def props(dataAccess: DAL with DatabaseSupport): Props = Props(classOf[ChatManagerActor], dataAccess)
+  def props(dataAccess: DAL with DatabaseSupport,
+            initialData: InitialData): Props = Props(classOf[ChatManagerActor], dataAccess, initialData)
 
   case class CreateNewChat(createChatRequest: CreateChatRequest, user: User)
 
   private case class ChatsLoaded(chats: Seq[Chat])
-  private case class ChatCreated(chat: Chat, createChatRequest: CreateChatRequest, sender: ActorRef)
+  private case class ChatCreated(chat: Chat, participants: Seq[Participant], createChatRequest: CreateChatRequest, sender: ActorRef)
 }
 
-class ChatManagerActor(dataAccess: DAL with DatabaseSupport) extends Actor with ActorLogging {
+class ChatManagerActor(dataAcces: DAL with DatabaseSupport,
+                       initialData: InitialData) extends Actor with ActorLogging {
 
-  import dataAccess._
+  import dataAcces._
   import profile.api._
 
   private implicit val executionContext = context.dispatcher
@@ -37,14 +39,16 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport) extends Actor with 
 
   @scala.throws[Exception](classOf[Exception])
   override def preStart(): Unit = {
-    db.run(chats.list()).map(ChatsLoaded) pipeTo self
+    val chatActorsSeq = initialData.chats.map{chat => {
+      val chatId = chat.id.get
+      val chatActorRef = createChatActor(chat, initialData.participants(chatId), initialData.messages(chatId))
+      (chatId, chatActorRef)
+    }}
+
+    chatActors = Map(chatActorsSeq: _*)
   }
 
   override def receive: Receive = {
-    case ChatsLoaded(chats) =>
-      val chatActorsSeq = chats.map{chat => (chat.id.get, createChatActor(chat))}
-      chatActors = Map(chatActorsSeq: _*)
-
     case CreateNewChat(createChatRequest, user) =>
       val sender = context.sender() //cache sender in val in order to not close over context.sender()
       db.run(users.find(createChatRequest.participants.map(new UserId(_)))).flatMap{foundUsers =>
@@ -57,21 +61,24 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport) extends Actor with 
           Future(CouldNotFindUsersError(errorMessage))
         }
       } onComplete {
-        case Success(chat: Chat) ⇒ self ! ChatCreated(chat, createChatRequest, sender)
+        case Success(chatWithParticipants: (Chat, Seq[Participant])) =>
+          self ! ChatCreated(chatWithParticipants._1, chatWithParticipants._2, createChatRequest, sender)
         case Success(error) => sender ! error
         case Failure(throwable) => sender ! DatabaseError(throwable.getMessage)
       }
 
-    case ChatCreated(chat, createChatRequest, sender) =>
-      val chatActor = createChatActor(chat)
+    case ChatCreated(chat, participants, createChatRequest, sender) =>
+      val chatActor = createChatActor(chat, participants, Seq())
       chatActors = chatActors + ((chat.id.get, chatActor))
       //TODO send addedToChat message to all participants
       sender ! chat
   }
 
-  private def createChatActor(chat: Chat) =
-    //TODO provide all necessary arguments for chat initialization
-    context.actorOf(ChatActor.props(chat.id.get, dataAccess), ChatActor.actorName(chat.id.get))
+  private def createChatActor(chat: Chat,
+                              participants: Seq[Participant],
+                              messages: Seq[Message]) =
+
+    context.actorOf(ChatActor.props(chat.id.get, dataAcces, participants, messages), ChatActor.actorName(chat.id.get))
 
 
 }
