@@ -1,8 +1,9 @@
 package pl.pgizka.gsenger.controllers.user
 
-import akka.actor.ActorRef
+import akka.actor.{ActorRef, ActorSystem}
+import pl.pgizka.gsenger.actors.UserActor.{FriendsUpdated, GetFriends}
 import pl.pgizka.gsenger.actors.UserManagerActor.UserAdded
-import pl.pgizka.gsenger.actors.WebSocketActor
+import pl.pgizka.gsenger.actors.{UserActor, WebSocketActor}
 import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
 import pl.pgizka.gsenger.controllers.user._
 import pl.pgizka.gsenger.errors._
@@ -14,12 +15,15 @@ import play.api.libs.json.Json.toJson
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.streams.ActorFlow
 import play.api.mvc._
+import akka.pattern.{ask, pipe}
+import pl.pgizka.gsenger.Error
 
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
 class UserController(override val dataAccess: DAL with DatabaseSupport,
                      facebookService: FacebookService,
+                     implicit val actorSystem: ActorSystem,
                      userManager: ActorRef) extends CommonController(dataAccess) {
   import dataAccess._
   import profile.api._
@@ -50,20 +54,12 @@ class UserController(override val dataAccess: DAL with DatabaseSupport,
   def getFriends = Authenticate.async(parse.json) {request =>
     val getFriendsRequest = request.body.as[GetFriendsRequest]
 
-    def friendsFound(dbAction: DBIO[Seq[(User, Contact)]]): Future[Seq[Friend]] = {
-      db.run(dbAction).map{users =>
-        users.map(tuple => new Friend(tuple._1))
-      }
-    }
+    UserActor.actorSelection(request.user.id.get, actorSystem) ? GetFriends(getFriendsRequest) map {
+      case FriendsUpdated(friends) => Ok(Json.toJson(GetFriendsResponse(friends)))
+      case error: Error => BadRequest(Json.toJson(new RestApiErrorResponse(error)))
+      case e => BadRequest
+    } recover actorAskError
 
-    val list = facebookService.fetchFacebookFriends(request.user.facebookToken.get).flatMap{
-      case Right(fbUsers) => friendsFound(contacts.updateContacts(request.user, Some(fbUsers), getFriendsRequest.phoneNumbers))
-      case Left(_) => friendsFound(contacts.updateContacts(request.user, None, getFriendsRequest.phoneNumbers))
-    }
-
-    list.map {users =>
-      Ok(Json.toJson(GetFriendsResponse(users)))
-    } recover databaseError
   }
 
 //  def socket = WebSocket.accept[String, String] { request =>

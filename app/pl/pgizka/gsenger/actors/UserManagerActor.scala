@@ -6,18 +6,21 @@ import pl.pgizka.gsenger.actors.UserManagerActor.UserAdded
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
+import pl.pgizka.gsenger.services.facebook.FacebookService
 import pl.pgizka.gsenger.startup.InitialData
 
 object UserManagerActor {
 
   def props(dataAccess: DAL with DatabaseSupport,
-            initialData: InitialData): Props = Props(classOf[UserManagerActor], dataAccess, initialData)
+            initialData: InitialData,
+            facebookService: FacebookService): Props = Props(classOf[UserManagerActor], dataAccess, initialData)
 
   case class UserAdded(user: User)
 }
 
 class UserManagerActor(dataAccess: DAL with DatabaseSupport,
-                       initialData: InitialData) extends Actor with ActorLogging {
+                       initialData: InitialData,
+                       facebookService: FacebookService) extends Actor with ActorLogging {
 
   import dataAccess._
   import profile.api._
@@ -30,7 +33,7 @@ class UserManagerActor(dataAccess: DAL with DatabaseSupport,
   override def preStart(): Unit = {
     val userActorSeq = initialData.users.map{user =>
       val userId = user.id.get
-      val userActorRef = createUserActor(userId, initialData.userChatParticipantMap(userId), initialData.userContactMap(userId))
+      val userActorRef = createUserActor(user, initialData.userChatParticipantMap(userId), initialData.userContactMap(userId))
       (userId, userActorRef)
     }
 
@@ -39,10 +42,10 @@ class UserManagerActor(dataAccess: DAL with DatabaseSupport,
 
   override def receive: Receive = {
     case UserAdded(user) =>
-      val userActor = createUserActor(user.id.get, Seq(), Seq())
+      val userActor = createUserActor(user, Seq(), Seq())
       userActors = userActors.+((user.id.get, userActor))
   }
 
-  private def createUserActor(userId: UserId, chatsWithParticipant: Seq[(Chat, Participant)], contacts: Seq[(User, Contact)]) =
-    context.actorOf(UserActor.props(userId, dataAccess, chatsWithParticipant, contacts), UserActor.actorName(userId))
+  private def createUserActor(user: User, chatsWithParticipant: Seq[(Chat, Participant)], contacts: Seq[(User, Contact)]) =
+    context.actorOf(UserActor.props(user, dataAccess, chatsWithParticipant, contacts, facebookService), UserActor.actorName(user.id.get))
 }
