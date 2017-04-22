@@ -27,10 +27,10 @@ object ChatManagerActor {
   private case class ChatCreated(chat: Chat, participants: Seq[Participant], createChatRequest: CreateChatRequest, sender: ActorRef)
 }
 
-class ChatManagerActor(dataAcces: DAL with DatabaseSupport,
+class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
                        initialData: InitialData) extends Actor with ActorLogging {
 
-  import dataAcces._
+  import dataAccess._
   import profile.api._
 
   private implicit val executionContext = context.dispatcher
@@ -41,7 +41,7 @@ class ChatManagerActor(dataAcces: DAL with DatabaseSupport,
   override def preStart(): Unit = {
     val chatActorsSeq = initialData.chats.map{chat => {
       val chatId = chat.id.get
-      val chatActorRef = createChatActor(chat, initialData.participants(chatId), initialData.messages(chatId))
+      val chatActorRef = createChatActor(chat, initialData.chatParticipantsMap(chatId), initialData.chatMessagesMap(chatId))
       (chatId, chatActorRef)
     }}
 
@@ -78,7 +78,7 @@ class ChatManagerActor(dataAcces: DAL with DatabaseSupport,
                               participants: Seq[Participant],
                               messages: Seq[Message]) =
 
-    context.actorOf(ChatActor.props(chat.id.get, dataAcces, participants, messages), ChatActor.actorName(chat.id.get))
+    context.actorOf(ChatActor.props(chat.id.get, dataAccess, participants, messages), ChatActor.actorName(chat.id.get))
 
 
 }
