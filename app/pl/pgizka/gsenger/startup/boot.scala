@@ -1,7 +1,7 @@
 package pl.pgizka.gsenger.startup
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import pl.pgizka.gsenger.actors.{ChatActor, ChatManagerActor}
+import pl.pgizka.gsenger.actors.{ChatActor, ChatManagerActor, UserManagerActor}
 import pl.pgizka.gsenger.model.ChatId
 import pl.pgizka.gsenger.persistance.H2DBConnector
 import pl.pgizka.gsenger.persistance.impl.DAL
@@ -12,7 +12,7 @@ import scala.concurrent.duration.Duration
 
 object boot extends H2DBConnector with DAL {
 
-  case class StartupResult(chatManager: ActorRef)
+  case class StartupResult(chatManager: ActorRef, userManager: ActorRef)
 
   import profile.api._
   await(db.run(create()))
@@ -36,8 +36,9 @@ object boot extends H2DBConnector with DAL {
     val initialData = await(InitialData.load(this))
 
     val chatManager = actorSystem.actorOf(ChatManagerActor.props(boot, initialData))
+    val userManager = actorSystem.actorOf(UserManagerActor.props(boot, initialData))
 
-    StartupResult(chatManager)
+    StartupResult(chatManager, userManager)
   }
 
   def await[T](awaitable: Awaitable[T]): T = {

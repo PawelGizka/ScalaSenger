@@ -1,5 +1,7 @@
 package pl.pgizka.gsenger.controllers.user
 
+import akka.actor.ActorRef
+import pl.pgizka.gsenger.actors.UserManagerActor.UserAdded
 import pl.pgizka.gsenger.actors.WebSocketActor
 import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
 import pl.pgizka.gsenger.controllers.user._
@@ -16,7 +18,9 @@ import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-class UserController(override val dataAccess: DAL with DatabaseSupport, val facebookService: FacebookService) extends CommonController(dataAccess) {
+class UserController(override val dataAccess: DAL with DatabaseSupport,
+                     facebookService: FacebookService,
+                     userManager: ActorRef) extends CommonController(dataAccess) {
   import dataAccess._
   import profile.api._
 
@@ -33,7 +37,9 @@ class UserController(override val dataAccess: DAL with DatabaseSupport, val face
         } yield (user, token)).transactionally
 
         db.run(dbAction) map {
-          case (user, token) => Ok(toJson(UserLoginRegistrationResponse(user.id.get.value, token.token)))
+          case (user, token) =>
+            userManager ! UserAdded(user)
+            Ok(toJson(UserLoginRegistrationResponse(user.id.get.value, token.token)))
         } recover databaseError
       }
 
