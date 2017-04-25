@@ -4,6 +4,7 @@ import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
 import pl.pgizka.gsenger.actors.UserActor._
 import pl.pgizka.gsenger.controllers.message.CreateMessageRequest
+import pl.pgizka.gsenger.controllers.user.UserController.FriendsUpdated
 import pl.pgizka.gsenger.controllers.user.{Friend, GetFriendsRequest}
 import pl.pgizka.gsenger.errors.DatabaseError
 import pl.pgizka.gsenger.model._
@@ -28,12 +29,13 @@ object UserActor {
 
   case class NewMessage(message: Message)
   case class AddedToChat(chat: Chat)
-
   case class GetFriends(getFriendsRequest: GetFriendsRequest)
-  case class FriendsUpdated(friends: Seq[Friend])
-  case class ContactsUpdated(contacts: Seq[(User, Contact)])
-
   case class CreateNewMessage(createMessageRequest: CreateMessageRequest)
+
+  case class NewWebSocketConnection(webSocketActor: ActorRef)
+  case class WebSocketConnectionClosed(webSocketActor: ActorRef)
+
+  private case class ContactsUpdated(contacts: Seq[(User, Contact)])
 }
 
 class UserActor (user: User,
@@ -44,7 +46,7 @@ class UserActor (user: User,
 
   import dataAccess.db
   import dataAccess.profile.api._
-  private var webSockets: Seq[ActorRef] = Seq()
+  private var webSockets: List[ActorRef] = List()
 
   private var chats: Map[ChatId, Chat] = Map()
   private var contacts: Map[UserId, Contact] = Map()
@@ -87,6 +89,12 @@ class UserActor (user: User,
 
     case AddedToChat(chat) =>
       chats = chats.+((chat.id.get, chat))
+
+    case NewWebSocketConnection(webSocketActor) =>
+      webSockets = webSocketActor :: webSockets
+
+    case WebSocketConnectionClosed(webSocketActor) =>
+      webSockets = webSockets.filter(actorRef => actorRef != webSocketActor)
   }
 
 

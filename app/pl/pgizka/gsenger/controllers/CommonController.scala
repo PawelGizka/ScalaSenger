@@ -21,19 +21,24 @@ class CommonController(val dataAccess: DAL with DatabaseSupport) extends Control
   object Authenticate extends ActionBuilder[UserRequest] {
 
     def invokeBlock[A](request: Request[A], block: UserRequest[A] => Future[Result]): Future[Result] = {
-      if (request.headers.get("accessToken").isEmpty) {
-        Future(Forbidden)
-      } else {
-        val token = request.headers.get("accessToken").get
-
-        db.run(tokens.findUser(token)).flatMap { userOption =>
-          userOption.map { user =>
-            block(new UserRequest[A](user, request))
-          } getOrElse Future(Forbidden)
-        } recover {
-          case e => Forbidden
+      validateRequest(request).flatMap{userOption =>
+        if (userOption.isDefined) {
+          block(new UserRequest[A](userOption.get, request))
+        } else {
+          Future(Forbidden)
         }
+      } recover {
+        case e => Forbidden
       }
+    }
+  }
+
+  def validateRequest(request: RequestHeader): Future[Option[User]] = {
+    if (request.headers.get("accessToken").isEmpty) {
+      Future(None)
+    } else {
+      val token = request.headers.get("accessToken").get
+      db.run(tokens.findUser(token))
     }
   }
 

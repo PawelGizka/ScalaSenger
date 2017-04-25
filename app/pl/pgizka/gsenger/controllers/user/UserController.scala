@@ -1,6 +1,6 @@
 package pl.pgizka.gsenger.controllers.user
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ActorNotFound, ActorRef, ActorSystem, Identify}
 import pl.pgizka.gsenger.actors.UserActor.{FriendsUpdated, GetFriends}
 import pl.pgizka.gsenger.actors.UserManagerActor.UserAdded
 import pl.pgizka.gsenger.actors.{UserActor, WebSocketActor}
@@ -17,14 +17,21 @@ import play.api.libs.streams.ActorFlow
 import play.api.mvc._
 import akka.pattern.{ask, pipe}
 import pl.pgizka.gsenger.Error
+import pl.pgizka.gsenger.controllers.user.UserController.FriendsUpdated
 
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
+object UserController {
+
+  case class FriendsUpdated(friends: Seq[Friend])
+}
+
 class UserController(override val dataAccess: DAL with DatabaseSupport,
                      facebookService: FacebookService,
                      implicit val actorSystem: ActorSystem,
-                     userManager: ActorRef) extends CommonController(dataAccess) {
+                     userManager: ActorRef,
+                     chatManager: ActorRef) extends CommonController(dataAccess) {
   import dataAccess._
   import profile.api._
 
@@ -62,8 +69,21 @@ class UserController(override val dataAccess: DAL with DatabaseSupport,
 
   }
 
-//  def socket = WebSocket.accept[String, String] { request =>
-//    ActorFlow.actorRef(out => WebSocketActor.props(out))
-//  }
+
+  def socket = WebSocket.acceptOrResult[String, String] { request =>
+    validateRequest(request).flatMap {userOption =>
+      if (userOption.isDefined) {
+        UserActor.actorSelection(userOption.get.id.get, actorSystem).resolveOne() map {userActorRef =>
+          Right(ActorFlow.actorRef(out => WebSocketActor.props(out, userOption.get.id.get, userActorRef, chatManager)))
+        } recover {
+          case e: ActorNotFound => Left(Forbidden)
+        }
+      } else {
+        Future(Left(Forbidden))
+      }
+    } recover {
+      case e => Left(Forbidden)
+    }
+  }
 
 }
