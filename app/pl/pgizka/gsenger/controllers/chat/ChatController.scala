@@ -29,7 +29,7 @@ class ChatController(override val dataAccess: DAL with DatabaseSupport,
   import dataAccess._
   import profile.api._
 
-  def createChat: Action[JsValue] = Authenticate.async(parse.json) { request =>
+  def createChat: Action[JsValue] = AuthenticateWithLogAction.async(parse.json) { request =>
     val createChatRequest = request.body.as[CreateChatRequest]
 
     implicit val timeout = Timeout(5, TimeUnit.MINUTES) //TODO replace with global timeout
@@ -41,7 +41,7 @@ class ChatController(override val dataAccess: DAL with DatabaseSupport,
     } recover actorAskError
   }
 
-  def listAllChatsWithParticipantInfo = Authenticate.async{ request =>
+  def listAllChatsWithParticipantInfo: Action[JsValue] = AuthenticateWithLogAction.async(parse.json){ request =>
     val chatsInfo= for {
       chatsFound <- db.run(chats.findAllChats(request.user.id.get))
       chatsWithParticipants <- db.run(participants.findAllParticipants(chatsFound))

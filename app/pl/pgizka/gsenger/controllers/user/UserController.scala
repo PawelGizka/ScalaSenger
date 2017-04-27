@@ -35,7 +35,7 @@ class UserController(override val dataAccess: DAL with DatabaseSupport,
   import dataAccess._
   import profile.api._
 
-  def loginFacebookUser: Action[JsValue] = Action.async(parse.json) { request =>
+  def loginFacebookUser: Action[JsValue] = LoggAction.async(parse.json) { request =>
     val userRegistrationRequest = request.body.as[UserFacebookLoginRequest]
 
     facebookService.fetchFacebookUser(userRegistrationRequest.facebookToken).flatMap {
@@ -58,7 +58,7 @@ class UserController(override val dataAccess: DAL with DatabaseSupport,
     }
   }
 
-  def getFriends = Authenticate.async(parse.json) {request =>
+  def getFriends = AuthenticateWithLogAction.async(parse.json) { request =>
     val getFriendsRequest = request.body.as[GetFriendsRequest]
 
     UserActor.actorSelection(request.user.id.get, actorSystem) ? GetFriends(getFriendsRequest) map {

@@ -26,7 +26,7 @@ class MessageController(override val dataAccess: DAL with DatabaseSupport, impli
   import dataAccess._
   import profile.api._
 
-  def createMessage: Action[JsValue] = Authenticate.async(parse.json) { request =>
+  def createMessage: Action[JsValue] = AuthenticateWithLogAction.async(parse.json) { request =>
     val createMessageRequest = request.body.as[CreateMessageRequest]
 
     implicit val timeout = Timeout(5, TimeUnit.MINUTES) //TODO replace with global timeout
