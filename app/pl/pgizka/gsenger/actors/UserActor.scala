@@ -4,12 +4,11 @@ import pl.pgizka.gsenger.actors.UserActor._
 import pl.pgizka.gsenger.controllers.message.CreateMessageRequest
 import pl.pgizka.gsenger.controllers.user.UserController.FriendsUpdated
 import pl.pgizka.gsenger.controllers.user.{Friend, GetFriendsRequest}
-import pl.pgizka.gsenger.errors.DatabaseError
+import pl.pgizka.gsenger.errors.{DatabaseError, Forbidden}
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.services.facebook.FacebookService
-
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
 
 import scala.concurrent.Future
@@ -30,7 +29,7 @@ object UserActor {
   case class NewMessage(message: Message)
   case class AddedToChat(chat: Chat)
   case class GetFriends(getFriendsRequest: GetFriendsRequest)
-  case class CreateNewMessage(createMessageRequest: CreateMessageRequest)
+  case class CreateNewMessage(createMessageRequest: CreateMessageRequest, requestContext: RequestContext)
 
   case class NewWebSocketConnection(webSocketActor: ActorRef)
   case class WebSocketConnectionClosed(webSocketActor: ActorRef)
@@ -83,6 +82,14 @@ class UserActor (user: User,
     case ContactsUpdated(contactsUpdated) =>
       contacts = Map(contactsUpdated.map{case (userContact, contact) => (userContact.id.get, contact)}: _*)
 
+    case CreateNewMessage(createMessageRequest, requestContext) =>
+      val hasAccess = chats.get(createMessageRequest.chatId).isDefined
+      if (hasAccess) {
+        ChatActor.actorSelection(createMessageRequest.chatId)(context.system) forward
+          ChatActor.CreateNewMessage(user.id.get, createMessageRequest, requestContext)
+      } else {
+        sender() ! ActorResponse(Forbidden, requestContext)
+      }
 
     case NewMessage(message) =>
 

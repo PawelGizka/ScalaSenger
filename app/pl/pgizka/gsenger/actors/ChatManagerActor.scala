@@ -62,7 +62,7 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
           Future(CouldNotFindUsersError(errorMessage))
         }
       } onComplete handleDbComplete(sender) {
-        case (chatWithParticipants: (Chat, Seq[Participant])) =>
+        case chatWithParticipants: (Chat, Seq[Participant]) =>
           self ! ChatCreated(chatWithParticipants._1, chatWithParticipants._2, createChatRequest, sender)
       }
 

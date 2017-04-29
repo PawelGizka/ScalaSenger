@@ -25,9 +25,9 @@ object ChatActor {
   def actorSelection(chatId: ChatId)(implicit actorSystem: ActorSystem): ActorSelection =
     actorSystem.actorSelection(s"user/chats/${actorName(chatId)}")
 
-  case class CreateNewMessage(sender: UserId, createMessageRequest: CreateMessageRequest)
+  case class CreateNewMessage(sender: UserId, createMessageRequest: CreateMessageRequest, requestContext: RequestContext = RequestContext())
 
-  private case class MessageCreated(message: Message, sender: ActorRef)
+  private case class MessageCreated(message: Message, sender: ActorRef, requestContext: RequestContext = RequestContext())
 }
 
 
@@ -52,7 +52,7 @@ class ChatActor(chatId: ChatId, dataAccess:
 
   override def receive: Receive = {
 
-    case CreateNewMessage(messageSender, createMessageRequest) =>
+    case CreateNewMessage(messageSender, createMessageRequest, requestContext) =>
       val sender = context.sender()
       db.run(participants.isUserParticipant(createMessageRequest.chatId, messageSender)).flatMap{hasAccess =>
         if (hasAccess) {
@@ -60,15 +60,16 @@ class ChatActor(chatId: ChatId, dataAccess:
         } else {
           Future(Forbidden)
         }
-      } onComplete handleDbComplete(sender){
-        case message: Message => self ! MessageCreated(message, sender)
+      } onComplete handleDbComplete(sender, requestContext){
+        case message: Message => self ! MessageCreated(message, sender, requestContext)
       }
 
-    case MessageCreated(message, sender) =>
+    case MessageCreated(message, sender, requestContext) =>
       messagesList = message :: messagesList
-      //TODO send message to all participants and do not send to sender
 
-      sender ! Message
+      sender ! ActorResponse(message, requestContext)
+    //TODO send message to all participants
+
 
 
   }
