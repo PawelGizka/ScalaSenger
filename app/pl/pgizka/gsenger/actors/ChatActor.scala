@@ -6,6 +6,7 @@ import pl.pgizka.gsenger.errors._
 import pl.pgizka.gsenger.model.{ChatId, Message, Participant, UserId}
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
+import pl.pgizka.gsenger.actors.ActorsUtils.handleDbComplete
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
 
@@ -59,10 +60,8 @@ class ChatActor(chatId: ChatId, dataAccess:
         } else {
           Future(Forbidden)
         }
-      } onComplete {
-        case Success(message: Message) => self ! MessageCreated(message, sender)
-        case Success(error) => sender ! error
-        case Failure(throwable) => sender ! DatabaseError(throwable.getMessage)
+      } onComplete handleDbComplete(sender){
+        case message: Message => self ! MessageCreated(message, sender)
       }
 
     case MessageCreated(message, sender) =>
