@@ -66,11 +66,10 @@ class ChatActor(chatId: ChatId, dataAccess:
 
     case MessageCreated(message, sender, requestContext) =>
       messagesList = message :: messagesList
-
       sender ! ActorResponse(message, requestContext)
-    //TODO send message to all participants
-
-
+      participantsMap.foreach {
+        case (userId: UserId, _) => UserActor.actorSelection(userId)(context.system) ! UserActor.NewMessage(message)
+      }
 
   }
 }

@@ -1,13 +1,11 @@
 package pl.pgizka.gsenger.actors
 
-import pl.pgizka.gsenger.actors.UserActor.{NewWebSocketConnection, WebSocketConnectionClosed}
+import pl.pgizka.gsenger.actors.UserActor.{NewMessage, NewWebSocketConnection, WebSocketConnectionClosed}
 import pl.pgizka.gsenger.controllers.message.CreateMessageRequest
 import pl.pgizka.gsenger.model.{Message, UserId}
 import pl.pgizka.gsenger.Error
 import pl.pgizka.gsenger.actors.WebSocketRequest._
-
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-
 import play.api.libs.json.{JsValue, Json}
 
 object WebSocketActor {
@@ -27,6 +25,9 @@ class WebSocketActor (out: ActorRef, userId: UserId, userActor: ActorRef, chatMa
   }
 
   override def receive: Receive = {
+
+    case NewMessage(message) =>
+      out ! WebSocketPush("newMessage", Json.toJson(message))
 
     case ActorResponse(error: Error, requestContext) =>
       out ! new WebSocketErrorResponse(requestContext, error)
