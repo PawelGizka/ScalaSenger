@@ -2,6 +2,7 @@ package pl.pgizka.gsenger.services.facebook
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import play.api.Logger
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.libs.ws.ning.NingWSClient
@@ -16,11 +17,14 @@ trait FacebookService {
 
 object realFacebookService extends FacebookService {
 
+  val logger: Logger = Logger("Facebook Service")
+
   override def fetchFacebookUser(facebookToken: String)(implicit executionContext: ExecutionContext): Future[Either[String, FbUser]] =
     fetchFacebookData(facebookToken, "me").map { wsResponse => {
       if (200 <= wsResponse.status && wsResponse.status <= 299) {
         Right (Json.parse(wsResponse.body).as[FbUser](Json.format[FbUser]))
       } else {
+        logger.error(s"Cannot fetch facebook user, status: ${wsResponse.status} body: ${wsResponse.body}")
         Left (wsResponse.body)
       }
   }}
@@ -31,6 +35,7 @@ object realFacebookService extends FacebookService {
         implicit val fbUserFormat = Json.format[FbUser]
         Right (Json.parse(wsResponse.body).as[Seq[FbUser]])
       } else {
+        logger.error(s"Cannot fetch facebook friends, status: ${wsResponse.status} body: ${wsResponse.body}")
         Left (wsResponse.body)
       }
     }}

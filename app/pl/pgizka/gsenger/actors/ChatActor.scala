@@ -1,12 +1,13 @@
 package pl.pgizka.gsenger.actors
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
 import pl.pgizka.gsenger.actors.ChatActor._
 import pl.pgizka.gsenger.controllers.message.CreateMessageRequest
 import pl.pgizka.gsenger.errors._
 import pl.pgizka.gsenger.model.{ChatId, Message, Participant, UserId}
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
+
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}

@@ -1,7 +1,5 @@
 package pl.pgizka.gsenger.actors
 
-import akka.actor.Actor.Receive
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
 import pl.pgizka.gsenger.actors.UserActor._
 import pl.pgizka.gsenger.controllers.message.CreateMessageRequest
 import pl.pgizka.gsenger.controllers.user.UserController.FriendsUpdated
@@ -11,6 +9,8 @@ import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.services.facebook.FacebookService
+
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}

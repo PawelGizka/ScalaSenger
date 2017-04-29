@@ -1,26 +1,22 @@
 package pl.pgizka.gsenger.controllers.chat
 
-import java.time.Instant
+import pl.pgizka.gsenger.actors.ChatManagerActor
+import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
+import pl.pgizka.gsenger.model.Chat
+import pl.pgizka.gsenger.persistance.DatabaseSupport
+import pl.pgizka.gsenger.persistance.impl.DAL
+import pl.pgizka.gsenger.Error
+import pl.pgizka.gsenger.model.Chat._
+
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorRef, ActorSystem}
-import pl.pgizka.gsenger.Utils._
-import pl.pgizka.gsenger.actors.ChatManagerActor
-import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
-import pl.pgizka.gsenger.model.{Chat, User, UserId}
-import pl.pgizka.gsenger.persistance.DatabaseSupport
-import pl.pgizka.gsenger.persistance.impl.DAL
-import pl.pgizka.gsenger.startup.boot
-import pl.pgizka.gsenger.Error
-import pl.pgizka.gsenger.model.Chat._
+import akka.pattern.ask
+import akka.util.Timeout
+
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Action
-import akka.pattern.{ask, pipe}
-import akka.util.Timeout
-import play.api.libs.concurrent.Akka
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 
 class ChatController(override val dataAccess: DAL with DatabaseSupport,

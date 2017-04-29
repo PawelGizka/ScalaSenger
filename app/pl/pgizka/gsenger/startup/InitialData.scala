@@ -4,9 +4,10 @@ package pl.pgizka.gsenger.startup
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
-import slick.dbio.DBIO
 
 import scala.concurrent.Future
+
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 
 case class InitialData(users: Seq[User],

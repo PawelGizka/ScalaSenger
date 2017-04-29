@@ -1,11 +1,8 @@
 package pl.pgizka.gsenger.actors
 
-import akka.actor.Actor.Receive
-import akka.actor.{Actor, ActorLogging, ActorRef, Identify, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import pl.pgizka.gsenger.actors.UserActor.{NewWebSocketConnection, WebSocketConnectionClosed}
-import pl.pgizka.gsenger.model.{Chat, UserId}
-import pl.pgizka.gsenger.persistance.DatabaseSupport
-import pl.pgizka.gsenger.persistance.impl.DAL
+import pl.pgizka.gsenger.model.UserId
 
 object WebSocketActor {
 

@@ -1,15 +1,15 @@
 package pl.pgizka.gsenger.startup
 
-import akka.actor.ActorSystem
-import com.google.inject.{Inject, Singleton}
+
 import pl.pgizka.gsenger.controllers.chat.ChatController
 import pl.pgizka.gsenger.controllers.message.MessageController
 import pl.pgizka.gsenger.controllers.user.UserController
 import pl.pgizka.gsenger.services.facebook.realFacebookService
-import pl.pgizka.gsenger.startup.boot.StartupResult
+
+
 import play.api.ApplicationLoader.Context
 import play.api.{Application, BuiltInComponentsFromContext}
-import play.api.libs.concurrent.Akka
+
 import router.Routes
 
 class ApplicationLoader extends play.api.ApplicationLoader {
@@ -24,7 +24,13 @@ class ApplicationModule(context: Context) extends BuiltInComponentsFromContext(c
 
   lazy val assets = new controllers.Assets(httpErrorHandler)
 
-  lazy val userController = new UserController(boot, realFacebookService, startupResult.userManager, actorSystem)
+  lazy val userController = new UserController(
+    dataAccess = boot,
+    facebookService = realFacebookService,
+    actorSystem = actorSystem,
+    materializer = materializer,
+    userManager = startupResult.userManager,
+    chatManager = startupResult.chatManager)
 
   lazy val chatsController = new ChatController(boot, actorSystem, startupResult.chatManager)
 

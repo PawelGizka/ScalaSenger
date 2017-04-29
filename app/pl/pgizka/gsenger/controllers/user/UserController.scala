@@ -1,26 +1,28 @@
 package pl.pgizka.gsenger.controllers.user
 
-import akka.actor.{ActorNotFound, ActorRef, ActorSystem, Identify}
-import pl.pgizka.gsenger.actors.UserActor.{FriendsUpdated, GetFriends}
+import pl.pgizka.gsenger.actors.UserActor.GetFriends
 import pl.pgizka.gsenger.actors.UserManagerActor.UserAdded
 import pl.pgizka.gsenger.actors.{UserActor, WebSocketActor}
 import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
-import pl.pgizka.gsenger.controllers.user._
 import pl.pgizka.gsenger.errors._
-import pl.pgizka.gsenger.model.{Contact, User}
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.services.facebook.FacebookService
+import pl.pgizka.gsenger.Error
+import pl.pgizka.gsenger.controllers.user.UserController.FriendsUpdated
+import pl.pgizka.gsenger.startup.Implicits.timeout
+
+import scala.concurrent.Future
+
+import akka.actor.{ActorNotFound, ActorRef, ActorSystem}
+import akka.pattern.ask
+import akka.stream.Materializer
+
+import play.api.mvc._
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.streams.ActorFlow
-import play.api.mvc._
-import akka.pattern.{ask, pipe}
-import pl.pgizka.gsenger.Error
-import pl.pgizka.gsenger.controllers.user.UserController.FriendsUpdated
-
-import scala.concurrent.ExecutionContext.Implicits._
-import scala.concurrent.Future
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 object UserController {
 
@@ -30,6 +32,7 @@ object UserController {
 class UserController(override val dataAccess: DAL with DatabaseSupport,
                      facebookService: FacebookService,
                      implicit val actorSystem: ActorSystem,
+                     implicit val materializer: Materializer,
                      userManager: ActorRef,
                      chatManager: ActorRef) extends CommonController(dataAccess) {
   import dataAccess._

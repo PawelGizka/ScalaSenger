@@ -1,7 +1,6 @@
 package pl.pgizka.gsenger.actors
 
-import akka.actor.Actor.Receive
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+
 import pl.pgizka.gsenger.actors.UserManagerActor.UserAdded
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.DatabaseSupport
@@ -9,11 +8,13 @@ import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.services.facebook.FacebookService
 import pl.pgizka.gsenger.startup.InitialData
 
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+
 object UserManagerActor {
 
   def props(dataAccess: DAL with DatabaseSupport,
             initialData: InitialData,
-            facebookService: FacebookService): Props = Props(classOf[UserManagerActor], dataAccess, initialData)
+            facebookService: FacebookService): Props = Props(classOf[UserManagerActor], dataAccess, initialData, facebookService)
 
   case class UserAdded(user: User)
 }

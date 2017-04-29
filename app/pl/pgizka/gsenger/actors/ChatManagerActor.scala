@@ -1,19 +1,19 @@
 package pl.pgizka.gsenger.actors
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
+import pl.pgizka.gsenger.Utils.{formatSequenceMessage, getNotFoundElements}
+import pl.pgizka.gsenger.actors.ChatManagerActor.{ChatCreated, CreateNewChat}
+import pl.pgizka.gsenger.controllers.chat.{CreateChatRequest}
+import pl.pgizka.gsenger.errors.{CouldNotFindUsersError, DatabaseError}
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.startup.{InitialData, boot}
+
 import akka.pattern._
-import pl.pgizka.gsenger.Utils.{formatSequenceMessage, getNotFoundElements}
-import pl.pgizka.gsenger.actors.ChatManagerActor.{ChatCreated, ChatsLoaded, CreateNewChat}
-import pl.pgizka.gsenger.controllers.RestApiErrorResponse
-import pl.pgizka.gsenger.controllers.chat.{CreateChatRequest, CreateChatResponse}
-import pl.pgizka.gsenger.errors.{CouldNotFindUsersError, DatabaseError}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 
 object ChatManagerActor {
@@ -48,6 +48,12 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
     chatActors = Map(chatActorsSeq: _*)
   }
 
+//  def dbOperationCompleted[U, T](sender: ActorRef)(onSuccess: U => T): Try[T]= {
+//    case Success(chatWithParticipants: U) => onSuccess(chatWithParticipants)
+//    case Success(error) => sender ! error
+//    case Failure(throwable) => sender ! DatabaseError(throwable.getMessage)
+//  }
+
   override def receive: Receive = {
     case CreateNewChat(createChatRequest, user) =>
       val sender = context.sender() //cache sender in val in order to not close over context.sender()
@@ -60,7 +66,13 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
           val errorMessage = formatSequenceMessage("Not found users ids: ", notFoundIds)
           Future(CouldNotFindUsersError(errorMessage))
         }
-      } onComplete {
+      } onComplete myComplete
+
+//      (dbOperationCompleted[(Chat, Seq[Participant]), Unit](sender){chatWithParticipants =>
+//        self ! ChatCreated(chatWithParticipants._1, chatWithParticipants._2, createChatRequest, sender)
+//      })
+
+    def myComplete: Try[Product with Serializable] => Any = {
         case Success(chatWithParticipants: (Chat, Seq[Participant])) =>
           self ! ChatCreated(chatWithParticipants._1, chatWithParticipants._2, createChatRequest, sender)
         case Success(error) => sender ! error
