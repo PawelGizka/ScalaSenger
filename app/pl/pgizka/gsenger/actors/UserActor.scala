@@ -29,7 +29,7 @@ object UserActor {
   def actorSelection(userId: UserId)(implicit actorSystem: ActorSystem): ActorSelection = actorSystem.actorSelection("user/users/" + actorName(userId))
 
   case class NewMessage(message: Message)
-  case class AddedToChat(chat: Chat)
+  case class AddedToChat(chat: Chat,participants: Seq[Participant])
   case class GetFriends(getFriendsRequest: GetFriendsRequest)
 
   case class CreateNewMessage(createMessageRequest: CreateMessageRequest, requestContext: RequestContext)
@@ -102,9 +102,11 @@ class UserActor (user: User,
     case NewMessage(message) =>
       webSockets.foreach(webSocket => webSocket ! WebSocketActor.NewMessage(message))
 
-
-    case AddedToChat(chat) =>
+    case AddedToChat(chat, participants) =>
       chats = chats.+((chat.id.get, chat))
+      webSockets.foreach{webSocket =>
+        webSocket ! WebSocketActor.AddedToChat(chat, participants)
+      }
 
     case NewWebSocketConnection(webSocketActor) =>
       webSockets = webSocketActor :: webSockets

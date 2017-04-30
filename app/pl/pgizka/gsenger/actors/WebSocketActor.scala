@@ -1,12 +1,12 @@
 package pl.pgizka.gsenger.actors
 
 import pl.pgizka.gsenger.controllers.message.CreateMessageRequest
-import pl.pgizka.gsenger.model.{Chat, Message, UserId}
+import pl.pgizka.gsenger.model.{Chat, Message, Participant, UserId}
 import pl.pgizka.gsenger.Error
 import pl.pgizka.gsenger.actors.WebSocketRequest._
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import pl.pgizka.gsenger.actors.WebSocketActor.NewMessage
-import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
+import pl.pgizka.gsenger.actors.WebSocketActor.{AddedToChat, NewMessage}
+import pl.pgizka.gsenger.controllers.chat.{ChatInfo, CreateChatRequest}
 import play.api.libs.json.{JsValue, Json}
 
 object WebSocketActor {
@@ -16,6 +16,7 @@ object WebSocketActor {
 
 
   case class NewMessage(message: Message)
+  case class AddedToChat(chat: Chat, participants: Seq[Participant])
 }
 
 class WebSocketActor (out: ActorRef, userId: UserId, userActor: ActorRef, chatManager: ActorRef) extends Actor with ActorLogging {
@@ -30,14 +31,17 @@ class WebSocketActor (out: ActorRef, userId: UserId, userActor: ActorRef, chatMa
     case NewMessage(message) =>
       out ! WebSocketPush("newMessage", Json.toJson(message))
 
+    case AddedToChat(chat, participants) =>
+      out ! WebSocketPush("addedToChat", Json.toJson(new ChatInfo(chat, participants)))
+
     case ActorResponse(error: Error, requestContext) =>
       out ! new WebSocketErrorResponse(requestContext, error)
 
     case ActorResponse(message: Message, requestContext) =>
       out ! new WebSocketResponse(requestContext, Json.toJson(message))
 
-    case ActorResponse(chat: Chat, requestContext) =>
-      out ! new WebSocketResponse(requestContext, Json.toJson(chat))
+    case ActorResponse((chat: Chat, participants: Seq[Participant]), requestContext) =>
+      out ! new WebSocketResponse(requestContext, Json.toJson(new ChatInfo(chat, participants)))
 
     case js: JsValue =>
       val request = js.as[WebSocketRequest]

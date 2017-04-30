@@ -38,6 +38,7 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
   import profile.api._
 
   private implicit val executionContext = context.dispatcher
+  private implicit val actorSystem = context.system
 
   var chatActors: Map[ChatId, ActorRef] = _
 
@@ -72,8 +73,11 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
     case ChatCreated(chat, participants, createChatRequest, sender, requestContext) =>
       val chatActor = createChatActor(chat, participants, Seq())
       chatActors = chatActors + ((chat.id.get, chatActor))
-      //TODO send addedToChat message to all participants
-      sender ! ActorResponse(chat, requestContext)
+      sender ! ActorResponse((chat, participants), requestContext)
+
+      participants.foreach{participant =>
+        UserActor.actorSelection(participant.user) ! UserActor.AddedToChat(chat, participants)
+      }
   }
 
   private def createChatActor(chat: Chat,
