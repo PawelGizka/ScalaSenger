@@ -14,14 +14,16 @@ object UserManagerActor {
 
   def props(dataAccess: DAL with DatabaseSupport,
             initialData: InitialData,
-            facebookService: FacebookService): Props = Props(classOf[UserManagerActor], dataAccess, initialData, facebookService)
+            facebookService: FacebookService,
+            chatManager: ActorRef): Props = Props(classOf[UserManagerActor], dataAccess, initialData, facebookService, chatManager)
 
   case class UserAdded(user: User)
 }
 
 class UserManagerActor(dataAccess: DAL with DatabaseSupport,
                        initialData: InitialData,
-                       facebookService: FacebookService) extends Actor with ActorLogging {
+                       facebookService: FacebookService,
+                       chatManager: ActorRef) extends Actor with ActorLogging {
 
   import dataAccess._
   import profile.api._
@@ -48,5 +50,5 @@ class UserManagerActor(dataAccess: DAL with DatabaseSupport,
   }
 
   private def createUserActor(user: User, chatsWithParticipant: Seq[(Chat, Participant)], contacts: Seq[(User, Contact)]) =
-    context.actorOf(UserActor.props(user, dataAccess, chatsWithParticipant, contacts, facebookService), UserActor.actorName(user.id.get))
+    context.actorOf(UserActor.props(user, dataAccess, chatsWithParticipant, contacts, facebookService, chatManager), UserActor.actorName(user.id.get))
 }

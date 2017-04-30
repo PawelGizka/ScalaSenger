@@ -23,6 +23,10 @@ case class WebSocketErrorResponse(method: Option[String], id: Option[String], st
   def this(requestContext: RequestContext, error: Error) =
     this(requestContext.method, requestContext.id, error)
 
+  def this(webSocketRequest: WebSocketRequest, error: Error) = {
+    this(Some(webSocketRequest.method), webSocketRequest.id, error)
+  }
+
 }
 
 case class WebSocketPush[A](method: String, content: A)

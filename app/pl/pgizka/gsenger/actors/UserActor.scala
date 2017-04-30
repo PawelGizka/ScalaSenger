@@ -2,7 +2,6 @@ package pl.pgizka.gsenger.actors
 
 import pl.pgizka.gsenger.actors.UserActor._
 import pl.pgizka.gsenger.controllers.message.CreateMessageRequest
-import pl.pgizka.gsenger.controllers.user.UserController.FriendsUpdated
 import pl.pgizka.gsenger.controllers.user.{Friend, GetFriendsRequest}
 import pl.pgizka.gsenger.errors.{DatabaseError, Forbidden}
 import pl.pgizka.gsenger.model._
@@ -13,7 +12,6 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem, P
 import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 object UserActor {
 

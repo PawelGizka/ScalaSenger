@@ -7,11 +7,10 @@ import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.Error
 import pl.pgizka.gsenger.model.Chat._
-import java.util.concurrent.TimeUnit
+import pl.pgizka.gsenger.startup.Implicits.timeout
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
-import akka.util.Timeout
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Action
@@ -26,8 +25,6 @@ class ChatController(override val dataAccess: DAL with DatabaseSupport,
   def createChat: Action[JsValue] = AuthenticateWithLogAction.async(parse.json) { request =>
     val createChatRequest = request.body.as[CreateChatRequest]
 
-    implicit val timeout = Timeout(5, TimeUnit.MINUTES) //TODO replace with global timeout
-
     chatManager ? ChatManagerActor.CreateNewChat(createChatRequest, request.user) map {
       case ActorResponse(chat: Chat, _) => Ok(Json.toJson(chat))
       case ActorResponse(error: Error, _) => BadRequest(Json.toJson(new RestApiErrorResponse(error)))
@@ -36,12 +33,9 @@ class ChatController(override val dataAccess: DAL with DatabaseSupport,
   }
 
   def listAllChatsWithParticipantInfo: Action[JsValue] = AuthenticateWithLogAction.async(parse.json){ request =>
-    val chatsInfo= for {
-      chatsFound <- db.run(chats.findAllChats(request.user.id.get))
-      chatsWithParticipants <- db.run(participants.findAllParticipants(chatsFound))
-    } yield chatsWithParticipants.map(ChatInfo(_))
+    val chatsInfos = db.run(chats.findAllChatsWithParticipants(request.user.id.get))
 
-    chatsInfo.map{chatsInfos =>
+    chatsInfos.map{chatsInfos =>
       Ok(Json.toJson(ListAllChatsWithParticipantInfoResponse(chatsInfos)))
     } recover databaseError
   }

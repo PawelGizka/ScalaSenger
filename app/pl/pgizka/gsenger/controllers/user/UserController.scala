@@ -66,7 +66,7 @@ class UserController(override val dataAccess: DAL with DatabaseSupport,
     validateRequest(request).flatMap {userOption =>
       if (userOption.isDefined) {
         UserActor.actorSelection(userOption.get.id.get).resolveOne() map {userActorRef =>
-          Right(ActorFlow.actorRef(out => WebSocketActor.props(out, userOption.get.id.get, userActorRef, chatManager)))
+          Right(ActorFlow.actorRef(out => WebSocketActor.props(out, userOption.get.id.get, userActorRef, dataAccess)))
         } recover {
           case e: ActorNotFound => Left(Forbidden)
         }

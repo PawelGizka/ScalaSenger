@@ -36,7 +36,7 @@ object boot extends H2DBConnector with DAL {
     val initialData = await(InitialData.load(this))
 
     val chatManager = actorSystem.actorOf(ChatManagerActor.props(boot, initialData))
-    val userManager = actorSystem.actorOf(UserManagerActor.props(boot, initialData, realFacebookService))
+    val userManager = actorSystem.actorOf(UserManagerActor.props(boot, initialData, realFacebookService, chatManager))
 
     StartupResult(chatManager, userManager)
   }

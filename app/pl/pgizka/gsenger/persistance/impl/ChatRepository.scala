@@ -2,7 +2,7 @@ package pl.pgizka.gsenger.persistance.impl
 
 import java.time.Instant
 
-import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
+import pl.pgizka.gsenger.controllers.chat.{ChatInfo, CreateChatRequest}
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
 import slick.profile.SqlProfile.ColumnOption.Nullable
@@ -26,6 +26,13 @@ trait ChatRepository extends EntityRepository {this: ParticipantRepository with 
   object chats extends EntityQueries[ChatId, Chat, Chats](new Chats(_)) {
 
     override def copyEntityFields(entity: Chat, id: Option[ChatId]): Chat = entity.copy(id = id)
+
+    def findAllChatsWithParticipants(userId: UserId)(implicit executionContext: ExecutionContext): DBIO[Seq[ChatInfo]] = {
+      for {
+        chatsFound <- chats.findAllChats(userId)
+        chatsWithParticipants <- participants.findAllParticipants(chatsFound)
+      } yield chatsWithParticipants.map(ChatInfo(_))
+    }
 
     def findAllChats(userId: UserId)(implicit executionContext: ExecutionContext): DBIO[Seq[Chat]] = {
       (for {
