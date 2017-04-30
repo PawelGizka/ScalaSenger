@@ -1,12 +1,13 @@
 package pl.pgizka.gsenger.actors
 
 import pl.pgizka.gsenger.controllers.message.CreateMessageRequest
-import pl.pgizka.gsenger.model.{Chat, Message, Participant, UserId}
+import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.Error
 import pl.pgizka.gsenger.actors.WebSocketRequest._
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import pl.pgizka.gsenger.actors.WebSocketActor.{AddedToChat, NewMessage}
 import pl.pgizka.gsenger.controllers.chat.{ChatInfo, CreateChatRequest}
+import pl.pgizka.gsenger.controllers.user.{Friend, GetFriendsRequest, GetFriendsResponse}
 import play.api.libs.json.{JsValue, Json}
 
 object WebSocketActor {
@@ -43,6 +44,9 @@ class WebSocketActor (out: ActorRef, userId: UserId, userActor: ActorRef, chatMa
     case ActorResponse((chat: Chat, participants: Seq[Participant]), requestContext) =>
       out ! new WebSocketResponse(requestContext, Json.toJson(new ChatInfo(chat, participants)))
 
+    case ActorResponse(friends: Seq[Friend], requestContext) =>
+      out ! new WebSocketResponse(requestContext, Json.toJson(new GetFriendsResponse(friends)))
+
     case js: JsValue =>
       val request = js.as[WebSocketRequest]
       val method = request.method
@@ -55,6 +59,9 @@ class WebSocketActor (out: ActorRef, userId: UserId, userActor: ActorRef, chatMa
 
         case "createNewChat" =>
           userActor ! UserActor.CreateNewChat(content.as[CreateChatRequest], new RequestContext(request))
+
+        case "getFriends" =>
+          userActor ! UserActor.GetFriends(content.as[GetFriendsRequest], new RequestContext(request))
       }
 
   }

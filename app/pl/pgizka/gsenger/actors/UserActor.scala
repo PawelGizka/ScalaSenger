@@ -30,10 +30,11 @@ object UserActor {
 
   case class NewMessage(message: Message)
   case class AddedToChat(chat: Chat,participants: Seq[Participant])
-  case class GetFriends(getFriendsRequest: GetFriendsRequest)
 
-  case class CreateNewMessage(createMessageRequest: CreateMessageRequest, requestContext: RequestContext)
-  case class CreateNewChat(createChatRequest: CreateChatRequest, requestContext: RequestContext)
+  case class GetFriends(getFriendsRequest: GetFriendsRequest, requestContext: RequestContext = RequestContext())
+
+  case class CreateNewMessage(createMessageRequest: CreateMessageRequest, requestContext: RequestContext = RequestContext())
+  case class CreateNewChat(createChatRequest: CreateChatRequest, requestContext: RequestContext = RequestContext())
 
   case class NewWebSocketConnection(webSocketActor: ActorRef)
   case class WebSocketConnectionClosed(webSocketActor: ActorRef)
@@ -65,7 +66,7 @@ class UserActor (user: User,
 
   override def receive: Receive = {
 
-    case GetFriends(getFriendsRequest) =>
+    case GetFriends(getFriendsRequest, requestContext) =>
       val sender = context.sender()
 
       def friendsFound(dbAction: DBIO[Seq[(User, Contact)]]): Future[(Seq[(User, Contact)], Seq[Friend])] = {
@@ -77,11 +78,10 @@ class UserActor (user: User,
       facebookService.fetchFacebookFriends(user.facebookToken.get).flatMap{
         case Right(fbUsers) => friendsFound(dataAccess.contacts.updateContacts(user, Some(fbUsers), getFriendsRequest.phoneNumbers))
         case Left(_) => friendsFound(dataAccess.contacts.updateContacts(user, None, getFriendsRequest.phoneNumbers))
-      } onComplete {
-        case Success((contacts: Seq[(User, Contact)], friends: Seq[Friend])) =>
+      } onComplete ActorsUtils.handleDbComplete(sender, requestContext) {
+        case (contacts: Seq[(User, Contact)], friends: Seq[Friend]) =>
           self ! ContactsUpdated(contacts)
-          sender ! FriendsUpdated(friends)
-        case Failure(throwable) => sender ! DatabaseError(throwable.getMessage)
+          sender ! ActorResponse(friends, requestContext)
       }
 
     case ContactsUpdated(contactsUpdated) =>
