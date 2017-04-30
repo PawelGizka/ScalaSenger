@@ -56,18 +56,25 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
   override def receive: Receive = {
     case CreateNewChat(createChatRequest, user, requestContext) =>
       val sender = context.sender() //cache sender in val in order to not close over context.sender()
+
+      // wrapper for chat and participants because non-variable type argument
+      // is unchecked since it is eliminated by erasure
+      case class ChatWithParticipants(chat: Chat, participants: Seq[Participant])
+
       db.run(users.find(createChatRequest.participants.map(new UserId(_)))).flatMap{foundUsers =>
         val allSpecifiedUsersExists = foundUsers.size == createChatRequest.participants.size
         if (allSpecifiedUsersExists) {
-          db.run(chats.insertFromRequest(createChatRequest, user))
+          db.run(chats.insertFromRequest(createChatRequest, user)).map{
+            case (chat: Chat, participants: Seq[Participant]) => ChatWithParticipants(chat, participants)
+          }
         } else {
           val notFoundIds = getNotFoundElements(createChatRequest.participants, foundUsers.map(_.id.get.value))
           val errorMessage = formatSequenceMessage("Not found users ids: ", notFoundIds)
           Future(CouldNotFindUsersError(errorMessage))
         }
       } onComplete handleDbComplete(sender, requestContext) {
-        case (chatWithParticipants: (Chat, Seq[Participant])) =>
-          self ! ChatCreated(chatWithParticipants._1, chatWithParticipants._2, createChatRequest, sender, requestContext)
+        case ChatWithParticipants(chat, participants) =>
+          self ! ChatCreated(chat, participants, createChatRequest, sender, requestContext)
       }
 
     case ChatCreated(chat, participants, createChatRequest, sender, requestContext) =>
