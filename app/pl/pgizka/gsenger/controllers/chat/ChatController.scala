@@ -1,19 +1,17 @@
 package pl.pgizka.gsenger.controllers.chat
 
-import pl.pgizka.gsenger.actors.ChatManagerActor
+import pl.pgizka.gsenger.actors.{ActorResponse, ChatManagerActor}
 import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
 import pl.pgizka.gsenger.model.Chat
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.Error
 import pl.pgizka.gsenger.model.Chat._
-
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Action
@@ -31,8 +29,8 @@ class ChatController(override val dataAccess: DAL with DatabaseSupport,
     implicit val timeout = Timeout(5, TimeUnit.MINUTES) //TODO replace with global timeout
 
     chatManager ? ChatManagerActor.CreateNewChat(createChatRequest, request.user) map {
-      case chat: Chat => Ok(Json.toJson(chat))
-      case error: Error => BadRequest(Json.toJson(new RestApiErrorResponse(error)))
+      case ActorResponse(chat: Chat, _) => Ok(Json.toJson(chat))
+      case ActorResponse(error: Error, _) => BadRequest(Json.toJson(new RestApiErrorResponse(error)))
       case e => BadRequest
     } recover actorAskError
   }

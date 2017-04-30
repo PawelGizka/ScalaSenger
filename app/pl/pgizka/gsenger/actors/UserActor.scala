@@ -10,6 +10,7 @@ import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.services.facebook.FacebookService
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
+import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -20,7 +21,8 @@ object UserActor {
             dataAccess: DAL with DatabaseSupport,
             chatsWithParticipant: Seq[(Chat, Participant)],
             contacts: Seq[(User, Contact)],
-            facebookService: FacebookService): Props = Props(classOf[UserActor], user, dataAccess, chatsWithParticipant, contacts, facebookService)
+            facebookService: FacebookService,
+            chatManager: ActorRef): Props = Props(classOf[UserActor], user, dataAccess, chatsWithParticipant, contacts, facebookService, chatManager)
 
   def actorName(userId: UserId): String = s"user-$userId"
 
@@ -29,7 +31,9 @@ object UserActor {
   case class NewMessage(message: Message)
   case class AddedToChat(chat: Chat)
   case class GetFriends(getFriendsRequest: GetFriendsRequest)
+
   case class CreateNewMessage(createMessageRequest: CreateMessageRequest, requestContext: RequestContext)
+  case class CreateNewChat(createChatRequest: CreateChatRequest, requestContext: RequestContext)
 
   case class NewWebSocketConnection(webSocketActor: ActorRef)
   case class WebSocketConnectionClosed(webSocketActor: ActorRef)
@@ -41,7 +45,8 @@ class UserActor (user: User,
                  dataAccess: DAL with DatabaseSupport,
                  chatsLoaded: Seq[(Chat, Participant)],
                  contactsLoaded: Seq[(User, Contact)],
-                 facebookService: FacebookService) extends Actor with ActorLogging {
+                 facebookService: FacebookService,
+                 chatManager: ActorRef) extends Actor with ActorLogging {
 
   import dataAccess.db
   import dataAccess.profile.api._
@@ -90,6 +95,9 @@ class UserActor (user: User,
       } else {
         sender() ! ActorResponse(Forbidden, requestContext)
       }
+
+    case CreateNewChat(createChatRequest, requestContext) =>
+      chatManager forward ChatManagerActor.CreateNewChat(createChatRequest, user, requestContext)
 
     case NewMessage(message) =>
       webSockets.foreach(webSocket => webSocket ! WebSocketActor.NewMessage(message))

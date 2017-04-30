@@ -22,10 +22,13 @@ object ChatManagerActor {
   def props(dataAccess: DAL with DatabaseSupport,
             initialData: InitialData): Props = Props(classOf[ChatManagerActor], dataAccess, initialData)
 
-  case class CreateNewChat(createChatRequest: CreateChatRequest, user: User)
+  case class CreateNewChat(createChatRequest: CreateChatRequest, user: User, requestContext: RequestContext = RequestContext())
 
   private case class ChatsLoaded(chats: Seq[Chat])
-  private case class ChatCreated(chat: Chat, participants: Seq[Participant], createChatRequest: CreateChatRequest, sender: ActorRef)
+  private case class ChatCreated(chat: Chat, participants: Seq[Participant],
+                                 createChatRequest: CreateChatRequest,
+                                 sender: ActorRef,
+                                 requestContext: RequestContext)
 }
 
 class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
@@ -50,7 +53,7 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
   }
 
   override def receive: Receive = {
-    case CreateNewChat(createChatRequest, user) =>
+    case CreateNewChat(createChatRequest, user, requestContext) =>
       val sender = context.sender() //cache sender in val in order to not close over context.sender()
       db.run(users.find(createChatRequest.participants.map(new UserId(_)))).flatMap{foundUsers =>
         val allSpecifiedUsersExists = foundUsers.size == createChatRequest.participants.size
@@ -61,16 +64,16 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
           val errorMessage = formatSequenceMessage("Not found users ids: ", notFoundIds)
           Future(CouldNotFindUsersError(errorMessage))
         }
-      } onComplete handleDbComplete(sender) {
-        case chatWithParticipants: (Chat, Seq[Participant]) =>
-          self ! ChatCreated(chatWithParticipants._1, chatWithParticipants._2, createChatRequest, sender)
+      } onComplete handleDbComplete(sender, requestContext) {
+        case (chatWithParticipants: (Chat, Seq[Participant])) =>
+          self ! ChatCreated(chatWithParticipants._1, chatWithParticipants._2, createChatRequest, sender, requestContext)
       }
 
-    case ChatCreated(chat, participants, createChatRequest, sender) =>
+    case ChatCreated(chat, participants, createChatRequest, sender, requestContext) =>
       val chatActor = createChatActor(chat, participants, Seq())
       chatActors = chatActors + ((chat.id.get, chatActor))
       //TODO send addedToChat message to all participants
-      sender ! chat
+      sender ! ActorResponse(chat, requestContext)
   }
 
   private def createChatActor(chat: Chat,

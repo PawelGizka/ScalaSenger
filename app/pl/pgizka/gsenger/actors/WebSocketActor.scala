@@ -1,11 +1,12 @@
 package pl.pgizka.gsenger.actors
 
-import pl.pgizka.gsenger.actors.UserActor.{NewMessage, NewWebSocketConnection, WebSocketConnectionClosed}
 import pl.pgizka.gsenger.controllers.message.CreateMessageRequest
-import pl.pgizka.gsenger.model.{Message, UserId}
+import pl.pgizka.gsenger.model.{Chat, Message, UserId}
 import pl.pgizka.gsenger.Error
 import pl.pgizka.gsenger.actors.WebSocketRequest._
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import pl.pgizka.gsenger.actors.WebSocketActor.NewMessage
+import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
 import play.api.libs.json.{JsValue, Json}
 
 object WebSocketActor {
@@ -21,7 +22,7 @@ class WebSocketActor (out: ActorRef, userId: UserId, userActor: ActorRef, chatMa
 
   @scala.throws[Exception](classOf[Exception])
   override def preStart(): Unit = {
-    userActor ! NewWebSocketConnection(self)
+    userActor ! UserActor.NewWebSocketConnection(self)
   }
 
   override def receive: Receive = {
@@ -35,6 +36,9 @@ class WebSocketActor (out: ActorRef, userId: UserId, userActor: ActorRef, chatMa
     case ActorResponse(message: Message, requestContext) =>
       out ! new WebSocketResponse(requestContext, Json.toJson(message))
 
+    case ActorResponse(chat: Chat, requestContext) =>
+      out ! new WebSocketResponse(requestContext, Json.toJson(chat))
+
     case js: JsValue =>
       val request = js.as[WebSocketRequest]
       val method = request.method
@@ -44,12 +48,15 @@ class WebSocketActor (out: ActorRef, userId: UserId, userActor: ActorRef, chatMa
       method match {
         case "createNewMessage" =>
           userActor ! UserActor.CreateNewMessage(content.as[CreateMessageRequest], new RequestContext(request))
+
+        case "createNewChat" =>
+          userActor ! UserActor.CreateNewChat(content.as[CreateChatRequest], new RequestContext(request))
       }
 
   }
 
   @scala.throws[Exception](classOf[Exception])
   override def postStop(): Unit = {
-    userActor ! WebSocketConnectionClosed(self)
+    userActor ! UserActor.WebSocketConnectionClosed(self)
   }
 }
