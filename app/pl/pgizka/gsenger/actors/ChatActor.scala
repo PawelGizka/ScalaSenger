@@ -23,7 +23,7 @@ object ChatActor {
   def actorName(chatId: ChatId): String = s"chat-$chatId"
 
   def actorSelection(chatId: ChatId)(implicit actorSystem: ActorSystem): ActorSelection =
-    actorSystem.actorSelection(s"user/chats/${actorName(chatId)}")
+    actorSystem.actorSelection(s"/user/chatManager/${actorName(chatId)}")
 
   case class CreateNewMessage(sender: UserId, createMessageRequest: CreateMessageRequest, requestContext: RequestContext = RequestContext())
 

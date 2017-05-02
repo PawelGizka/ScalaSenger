@@ -1,24 +1,55 @@
 package scala.controllers
 
+import akka.actor.{ActorRef, ActorSystem}
 import pl.pgizka.gsenger.Utils.formatSequenceMessage
+import pl.pgizka.gsenger.actors.{ChatManagerActor, UserManagerActor}
 import pl.pgizka.gsenger.controllers.chat.{ChatController, CreateChatRequest, CreateChatResponse, ListAllChatsWithParticipantInfoResponse}
 import pl.pgizka.gsenger.errors._
-import pl.pgizka.gsenger.model.ChatType
+import pl.pgizka.gsenger.model.{Chat, ChatId, ChatType}
+import pl.pgizka.gsenger.services.facebook.realFacebookService
+import pl.pgizka.gsenger.startup.InitialData
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.Result
+import play.api.mvc.{AnyContentAsEmpty, Request, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
 import scala.Utils._
-import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Awaitable, Future}
 
 
 class ChatsControllerSpec extends ControllerSpecWithDefaultScenario {
-
-  val chatsController = new ChatController(this)
+  implicit lazy val system = ActorSystem()
 
   import profile.api._
   import pl.pgizka.gsenger.startup.DefaultScenario._
+
+  var chatManager: ActorRef = _
+  var userManager: ActorRef = _
+
+  var chatsController: ChatController = _
+
+  before {
+    db.run(createDefaultScenarioAction).futureValue
+
+    val initialData = await(InitialData.load(this))
+
+    chatManager = system.actorOf(ChatManagerActor.props(this, initialData), "chatManager")
+    userManager = system.actorOf(UserManagerActor.props(this, initialData, realFacebookService, chatManager), "userManager")
+
+    chatsController = new ChatController(this, system, chatManager)
+  }
+
+  def await[T](awaitable: Awaitable[T]): T = {
+    Await.result(awaitable, Duration.Inf)
+  }
+
+  after {
+    db.run(schema.drop).futureValue
+    system.stop(chatManager)
+    system.stop(userManager)
+  }
+
 
   "listAllChatsWithParticipantInfo" should {
     "return 200 and list of all chats with Participant info for specified user" in {
@@ -47,8 +78,8 @@ class ChatsControllerSpec extends ControllerSpecWithDefaultScenario {
 
       status(response) must equal(200)
 
-      val responseBody = contentAs[CreateChatResponse](response)
-      responseBody.chatId must equal(3)
+      val responseBody = contentAs[Chat](response)
+      responseBody.id.get must equal(ChatId(3))
     }
 
     "return 400 and error response with detail info when there is no users with specified ids" in {

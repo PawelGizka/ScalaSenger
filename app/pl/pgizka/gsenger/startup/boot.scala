@@ -1,24 +1,18 @@
 package pl.pgizka.gsenger.startup
 
-import pl.pgizka.gsenger.actors.{ChatManagerActor, UserManagerActor}
-import pl.pgizka.gsenger.persistance.H2DBConnector
+import pl.pgizka.gsenger.persistance.{DatabaseSupport, H2DBConnector}
 import pl.pgizka.gsenger.persistance.impl.DAL
-import pl.pgizka.gsenger.services.facebook.realFacebookService
+import pl.pgizka.gsenger.Utils.await
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+object dataAccess extends H2DBConnector with DAL
 
-import scala.concurrent.{Await, Awaitable}
-import scala.concurrent.duration.Duration
+object boot {
 
-object boot extends H2DBConnector with DAL {
+  def initiateDataAccess(dataAccess: DAL with DatabaseSupport): Unit = {
+    import dataAccess._
+    import profile.api._
 
-  case class StartupResult(chatManager: ActorRef, userManager: ActorRef)
-
-  import profile.api._
-  await(db.run(create()))
-
-  def start(actorSystem: ActorSystem): StartupResult = {
-    println("hello from start")
+    await(db.run(create()))
 
     import DefaultScenario._
 
@@ -32,19 +26,6 @@ object boot extends H2DBConnector with DAL {
     )
 
     await(db.run(createDefaultScenarioAction))
-
-    val initialData = await(InitialData.load(this))
-
-    val chatManager = actorSystem.actorOf(ChatManagerActor.props(boot, initialData))
-    val userManager = actorSystem.actorOf(UserManagerActor.props(boot, initialData, realFacebookService, chatManager))
-
-    StartupResult(chatManager, userManager)
   }
-
-  def await[T](awaitable: Awaitable[T]): T = {
-    Await.result(awaitable, Duration.Inf)
-  }
-
-
 }
 

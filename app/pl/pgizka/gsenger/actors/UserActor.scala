@@ -24,7 +24,7 @@ object UserActor {
 
   def actorName(userId: UserId): String = s"user-$userId"
 
-  def actorSelection(userId: UserId)(implicit actorSystem: ActorSystem): ActorSelection = actorSystem.actorSelection("user/users/" + actorName(userId))
+  def actorSelection(userId: UserId)(implicit actorSystem: ActorSystem): ActorSelection = actorSystem.actorSelection("user/userManager/" + actorName(userId))
 
   case class NewMessage(message: Message)
   case class AddedToChat(chat: Chat,participants: Seq[Participant])
@@ -101,6 +101,7 @@ class UserActor (user: User,
       webSockets.foreach(webSocket => webSocket ! WebSocketActor.NewMessage(message))
 
     case AddedToChat(chat, participants) =>
+      println("added to chat")
       chats = chats.+((chat.id.get, chat))
       webSockets.foreach{webSocket =>
         webSocket ! WebSocketActor.AddedToChat(chat, participants)

@@ -6,6 +6,8 @@ import pl.pgizka.gsenger.model._
 import play.api.libs.json.OFormat
 
 import scala.collection.mutable
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Awaitable}
 
 
 object Utils {
@@ -18,6 +20,10 @@ object Utils {
 
   def formatSequenceMessage[A](message: String, elements: Seq[A]): String =
     message + " " + elements.foldLeft("")((a, b) => a + ",  " + b)
+
+  def await[T](awaitable: Awaitable[T]): T = {
+    Await.result(awaitable, Duration.Inf)
+  }
 
   /**
     * Type alias for OFormat[A]

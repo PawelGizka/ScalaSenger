@@ -12,6 +12,7 @@ libraryDependencies ++= Seq( jdbc , cache , ws   , specs2 % Test,
   ws,
   "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
   "com.typesafe.akka" %% "akka-actor" % "2.4.16",
+  "com.typesafe.akka" %% "akka-testkit" % "2.4.16",
   "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0" % "test"
 )
 
