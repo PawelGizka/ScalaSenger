@@ -50,16 +50,16 @@ class WebSocketActor (out: ActorRef,
     case AddedToChat(chat, participants) =>
       out ! WebSocketPush("addedToChat", Json.toJson(new ChatInfo(chat, participants)))
 
-    case ActorResponse(error: Error, requestContext) =>
+    case ActorErrorResponse(error: Error, requestContext) =>
       out ! new WebSocketErrorResponse(requestContext, error)
 
-    case ActorResponse(message: Message, requestContext) =>
+    case ChatActor.CreateNewMessageResponse(message, requestContext)=>
       out ! new WebSocketResponse(requestContext, Json.toJson(message))
 
-    case ActorResponse((chat: Chat, participants: Seq[Participant]), requestContext) =>
+    case ChatManagerActor.CreateNewChatResponse(chat, participants, requestContext) =>
       out ! new WebSocketResponse(requestContext, Json.toJson(new ChatInfo(chat, participants)))
 
-    case ActorResponse(friends: Seq[Friend], requestContext) =>
+    case UserActor.GetFriendsResponse(friends, requestContext) =>
       out ! new WebSocketResponse(requestContext, Json.toJson(new GetFriendsResponse(friends)))
 
     case js: JsValue =>

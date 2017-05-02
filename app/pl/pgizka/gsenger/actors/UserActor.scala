@@ -27,12 +27,14 @@ object UserActor {
   def actorSelection(userId: UserId)(implicit actorSystem: ActorSystem): ActorSelection = actorSystem.actorSelection("user/userManager/" + actorName(userId))
 
   case class NewMessage(message: Message)
-  case class AddedToChat(chat: Chat,participants: Seq[Participant])
+  case class AddedToChat(chat: Chat, participants: Seq[Participant])
 
   case class GetFriends(getFriendsRequest: GetFriendsRequest, requestContext: RequestContext = RequestContext())
-
   case class CreateNewMessage(createMessageRequest: CreateMessageRequest, requestContext: RequestContext = RequestContext())
   case class CreateNewChat(createChatRequest: CreateChatRequest, requestContext: RequestContext = RequestContext())
+
+  //responses
+  case class GetFriendsResponse(friends: Seq[Friend], override val requestContext: RequestContext) extends ActorResponse
 
   case class NewWebSocketConnection(webSocketActor: ActorRef)
   case class WebSocketConnectionClosed(webSocketActor: ActorRef)
@@ -67,9 +69,11 @@ class UserActor (user: User,
     case GetFriends(getFriendsRequest, requestContext) =>
       val sender = context.sender()
 
-      def friendsFound(dbAction: DBIO[Seq[(User, Contact)]]): Future[(Seq[(User, Contact)], Seq[Friend])] = {
+      case class Result(contactsUpdated: Seq[(User, Contact)], friendsUpdated: Seq[Friend])
+
+      def friendsFound(dbAction: DBIO[Seq[(User, Contact)]]): Future[Result] = {
         db.run(dbAction).map{contacts =>
-          (contacts, contacts.map(tuple => new Friend(tuple._1)))
+          Result(contacts, contacts.map(tuple => new Friend(tuple._1)))
         }
       }
 
@@ -77,9 +81,9 @@ class UserActor (user: User,
         case Right(fbUsers) => friendsFound(dataAccess.contacts.updateContacts(user, Some(fbUsers), getFriendsRequest.phoneNumbers))
         case Left(_) => friendsFound(dataAccess.contacts.updateContacts(user, None, getFriendsRequest.phoneNumbers))
       } onComplete ActorsUtils.handleDbComplete(sender, requestContext) {
-        case (contacts: Seq[(User, Contact)], friends: Seq[Friend]) =>
-          self ! ContactsUpdated(contacts)
-          sender ! ActorResponse(friends, requestContext)
+        case Result(contactsUpdated, friendsUpdated) =>
+          self ! ContactsUpdated(contactsUpdated)
+          sender ! GetFriendsResponse(friendsUpdated, requestContext)
       }
 
     case ContactsUpdated(contactsUpdated) =>
@@ -91,7 +95,7 @@ class UserActor (user: User,
         ChatActor.actorSelection(createMessageRequest.chatId)(context.system) forward
           ChatActor.CreateNewMessage(user.id.get, createMessageRequest, requestContext)
       } else {
-        sender() ! ActorResponse(Forbidden, requestContext)
+        sender() ! ActorErrorResponse(Forbidden, requestContext)
       }
 
     case CreateNewChat(createChatRequest, requestContext) =>

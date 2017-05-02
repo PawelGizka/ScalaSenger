@@ -2,7 +2,7 @@ package pl.pgizka.gsenger.controllers.user
 
 import pl.pgizka.gsenger.actors.UserActor.GetFriends
 import pl.pgizka.gsenger.actors.UserManagerActor.UserAdded
-import pl.pgizka.gsenger.actors.{ActorResponse, UserActor, WebSocketActor}
+import pl.pgizka.gsenger.actors.{ActorErrorResponse, ActorResponse, UserActor, WebSocketActor}
 import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
 import pl.pgizka.gsenger.errors._
 import pl.pgizka.gsenger.persistance.DatabaseSupport
@@ -56,8 +56,8 @@ class UserController(override val dataAccess: DAL with DatabaseSupport,
     val getFriendsRequest = request.body.as[GetFriendsRequest]
 
     UserActor.actorSelection(request.user.id.get) ? GetFriends(getFriendsRequest) map {
-      case ActorResponse(friends: Seq[Friend], _) => Ok(Json.toJson(new GetFriendsResponse(friends)))
-      case ActorResponse(error: Error, _) => BadRequest(Json.toJson(new RestApiErrorResponse(error)))
+      case UserActor.GetFriendsResponse(friends: Seq[Friend], _) => Ok(Json.toJson(new GetFriendsResponse(friends)))
+      case ActorErrorResponse(error: Error, _) => BadRequest(Json.toJson(new RestApiErrorResponse(error)))
       case e => BadRequest
     } recover actorAskError
   }

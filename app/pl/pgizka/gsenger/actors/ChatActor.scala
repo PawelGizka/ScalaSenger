@@ -27,6 +27,9 @@ object ChatActor {
 
   case class CreateNewMessage(sender: UserId, createMessageRequest: CreateMessageRequest, requestContext: RequestContext = RequestContext())
 
+  //responses
+  case class CreateNewMessageResponse(message: Message, override val requestContext: RequestContext) extends ActorResponse
+
   private case class MessageCreated(message: Message, sender: ActorRef, requestContext: RequestContext = RequestContext())
 }
 
@@ -66,7 +69,7 @@ class ChatActor(chatId: ChatId, dataAccess:
 
     case MessageCreated(message, sender, requestContext) =>
       messagesList = message :: messagesList
-      sender ! ActorResponse(message, requestContext)
+      sender ! CreateNewMessageResponse(message, requestContext)
       participantsMap.foreach {
         case (userId: UserId, _) => UserActor.actorSelection(userId)(context.system) ! UserActor.NewMessage(message)
       }

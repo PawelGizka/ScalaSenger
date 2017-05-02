@@ -1,15 +1,14 @@
 package pl.pgizka.gsenger.actors
 
 import pl.pgizka.gsenger.Utils.{formatSequenceMessage, getNotFoundElements}
-import pl.pgizka.gsenger.actors.ChatManagerActor.{ChatCreated, CreateNewChat}
-import pl.pgizka.gsenger.controllers.chat.{CreateChatRequest}
+import pl.pgizka.gsenger.actors.ChatManagerActor.{ChatCreated, CreateNewChat, CreateNewChatResponse}
+import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
 import pl.pgizka.gsenger.errors.{CouldNotFindUsersError, DatabaseError}
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.startup.{InitialData, boot}
 import pl.pgizka.gsenger.actors.ActorsUtils.handleDbComplete
-
 import akka.pattern._
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
 
@@ -23,6 +22,11 @@ object ChatManagerActor {
             initialData: InitialData): Props = Props(classOf[ChatManagerActor], dataAccess, initialData)
 
   case class CreateNewChat(createChatRequest: CreateChatRequest, user: User, requestContext: RequestContext = RequestContext())
+
+  //responses
+  case class CreateNewChatResponse(chat: Chat,
+                                   participants: Seq[Participant],
+                                   override val requestContext: RequestContext) extends ActorResponse
 
   private case class ChatsLoaded(chats: Seq[Chat])
   private case class ChatCreated(chat: Chat, participants: Seq[Participant],
@@ -80,7 +84,7 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
     case ChatCreated(chat, participants, createChatRequest, sender, requestContext) =>
       val chatActor = createChatActor(chat, participants, Seq())
       chatActors = chatActors + ((chat.id.get, chatActor))
-      sender ! ActorResponse((chat, participants), requestContext)
+      sender ! CreateNewChatResponse(chat, participants, requestContext)
 
       participants.foreach{participant =>
         UserActor.actorSelection(participant.user) ! UserActor.AddedToChat(chat, participants)

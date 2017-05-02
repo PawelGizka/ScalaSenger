@@ -1,6 +1,6 @@
 package pl.pgizka.gsenger.controllers.chat
 
-import pl.pgizka.gsenger.actors.{ActorResponse, ChatManagerActor}
+import pl.pgizka.gsenger.actors.{ActorErrorResponse, ActorResponse, ChatManagerActor}
 import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
 import pl.pgizka.gsenger.model.{Chat, Participant}
 import pl.pgizka.gsenger.persistance.DatabaseSupport
@@ -25,8 +25,8 @@ class ChatController(override val dataAccess: DAL with DatabaseSupport,
     val createChatRequest = request.body.as[CreateChatRequest]
 
     chatManager ? ChatManagerActor.CreateNewChat(createChatRequest, request.user) map {
-      case ActorResponse((chat: Chat, participants: Seq[Participant]), _) => Ok(Json.toJson(chat))
-      case ActorResponse(error: Error, _) => BadRequest(Json.toJson(new RestApiErrorResponse(error)))
+      case ChatManagerActor.CreateNewChatResponse(chat, participants, _) => Ok(Json.toJson(chat))
+      case ActorErrorResponse(error: Error, _) => BadRequest(Json.toJson(new RestApiErrorResponse(error)))
       case e => BadRequest
     } recover actorAskError
   }
