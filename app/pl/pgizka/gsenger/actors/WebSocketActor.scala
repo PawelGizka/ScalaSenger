@@ -32,6 +32,7 @@ object WebSocketActor {
 class WebSocketActor (out: ActorRef,
                       userId: UserId,
                       userActor: ActorRef,
+                      chatManagerActor: ActorRef,
                       dataAccess: DAL with DatabaseSupport) extends Actor with ActorLogging {
 
   import dataAccess._
@@ -70,10 +71,12 @@ class WebSocketActor (out: ActorRef,
 
       method match {
         case "createNewMessage" =>
-          userActor ! UserActor.CreateNewMessage(content.as[CreateMessageRequest], new RequestContext(request))
+          val createMessageRequest = content.as[CreateMessageRequest]
+          ChatActor.actorSelection(createMessageRequest.chatId)(context.system) forward
+            ChatActor.CreateNewMessage(userId, createMessageRequest, new RequestContext(request))
 
         case "createNewChat" =>
-          userActor ! UserActor.CreateNewChat(content.as[CreateChatRequest], new RequestContext(request))
+          chatManagerActor ! ChatManagerActor.CreateNewChat(content.as[CreateChatRequest], userId, new RequestContext(request))
 
         case "getFriends" =>
           userActor ! UserActor.GetFriends(content.as[GetFriendsRequest], new RequestContext(request))

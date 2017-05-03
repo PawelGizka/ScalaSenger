@@ -30,8 +30,6 @@ object UserActor {
   case class AddedToChat(chat: Chat, participants: Seq[Participant])
 
   case class GetFriends(getFriendsRequest: GetFriendsRequest, requestContext: RequestContext = RequestContext())
-  case class CreateNewMessage(createMessageRequest: CreateMessageRequest, requestContext: RequestContext = RequestContext())
-  case class CreateNewChat(createChatRequest: CreateChatRequest, requestContext: RequestContext = RequestContext())
 
   //responses
   case class GetFriendsResponse(friends: Seq[Friend], override val requestContext: RequestContext) extends ActorResponse
@@ -88,18 +86,6 @@ class UserActor (user: User,
 
     case ContactsUpdated(contactsUpdated) =>
       contacts = Map(contactsUpdated.map{case (userContact, contact) => (userContact.id.get, contact)}: _*)
-
-    case CreateNewMessage(createMessageRequest, requestContext) =>
-      val hasAccess = chats.get(createMessageRequest.chatId).isDefined
-      if (hasAccess) {
-        ChatActor.actorSelection(createMessageRequest.chatId)(context.system) forward
-          ChatActor.CreateNewMessage(user.id.get, createMessageRequest, requestContext)
-      } else {
-        sender() ! ActorErrorResponse(Forbidden, requestContext)
-      }
-
-    case CreateNewChat(createChatRequest, requestContext) =>
-      chatManager forward ChatManagerActor.CreateNewChat(createChatRequest, user, requestContext)
 
     case NewMessage(message) =>
       webSockets.foreach(webSocket => webSocket ! WebSocketActor.NewMessage(message))

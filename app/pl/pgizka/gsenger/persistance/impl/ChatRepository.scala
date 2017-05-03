@@ -42,10 +42,10 @@ trait ChatRepository extends EntityRepository {this: ParticipantRepository with 
       } yield chat).result
     }
 
-    def insertFromRequest(createChatRequest: CreateChatRequest, user: User)
+    def insertFromRequest(createChatRequest: CreateChatRequest, userId: UserId)
                          (implicit executionContext: ExecutionContext): DBIO[(Chat, Seq[Participant])] = (for {
       chat <- chats.insert(new Chat(createChatRequest))
-      participants <- participants.insertFromCreateChatRequest(createChatRequest, chat, user)
+      participants <- participants.insertFromCreateChatRequest(createChatRequest, chat, userId)
       _ <- contacts.ensureEverybodyKnowsEachOther(participants)
     } yield (chat, participants)).transactionally
 

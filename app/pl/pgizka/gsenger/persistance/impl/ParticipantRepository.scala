@@ -29,8 +29,8 @@ trait ParticipantRepository extends EntityRepository {this: ChatRepository with 
 
     override def copyEntityFields(entity: Participant, id: Option[ParticipantId]): Participant = entity.copy(id = id)
 
-    def insertFromCreateChatRequest(createChatRequest: CreateChatRequest, chat: Chat, user: User): DBIO[Seq[Participant]] = {
-      val participantsIds = (createChatRequest.participants :+ user.idValue).distinct
+    def insertFromCreateChatRequest(createChatRequest: CreateChatRequest, chat: Chat, userId: UserId): DBIO[Seq[Participant]] = {
+      val participantsIds = (createChatRequest.participants :+ userId.value).distinct
       insert(participantsIds.map(participantId => new Participant(chat, UserId(participantId))))
     }
 

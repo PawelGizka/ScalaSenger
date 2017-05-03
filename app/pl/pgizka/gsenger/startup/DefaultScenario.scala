@@ -2,6 +2,10 @@ package pl.pgizka.gsenger.startup
 
 import pl.pgizka.gsenger.model.Contact
 import pl.pgizka.gsenger.Utils._
+import pl.pgizka.gsenger.persistance.DatabaseSupport
+import pl.pgizka.gsenger.persistance.impl.DAL
+import slick.dbio.Effect.{Schema, Write}
+import slick.dbio.{DBIOAction, NoStream}
 
 
 object DefaultScenario {
@@ -42,5 +46,21 @@ object DefaultScenario {
   val chatTestData = List(chat1, chat2)
   val participantTestData = List(participant1, participant2, participant3, participant4)
   val messageTestData = List(message1, message2, message3)
+
+  def createDefaultScenarioAction(dataAccess: DAL with DatabaseSupport): DBIOAction[Unit, NoStream, Write with Schema] = {
+    import dataAccess._
+    import profile.api._
+
+    DBIO.seq(
+      schema.create,
+      users ++= userTestData,
+      tokens ++= tokenTestData,
+      devices ++= deviceTestData,
+      contacts ++= contactTestData,
+      chats ++= chatTestData,
+      participants ++= participantTestData,
+      messages ++= messageTestData
+    )
+  }
 
 }

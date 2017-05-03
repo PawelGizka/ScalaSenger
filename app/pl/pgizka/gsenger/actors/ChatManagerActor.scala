@@ -21,7 +21,7 @@ object ChatManagerActor {
   def props(dataAccess: DAL with DatabaseSupport,
             initialData: InitialData): Props = Props(classOf[ChatManagerActor], dataAccess, initialData)
 
-  case class CreateNewChat(createChatRequest: CreateChatRequest, user: User, requestContext: RequestContext = RequestContext())
+  case class CreateNewChat(createChatRequest: CreateChatRequest, userId: UserId, requestContext: RequestContext = RequestContext())
 
   //responses
   case class CreateNewChatResponse(chat: Chat,
@@ -58,7 +58,7 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
   }
 
   override def receive: Receive = {
-    case CreateNewChat(createChatRequest, user, requestContext) =>
+    case CreateNewChat(createChatRequest, userId, requestContext) =>
       val sender = context.sender() //cache sender in val in order to not close over context.sender()
 
       // wrapper for chat and participants because non-variable type argument
@@ -68,7 +68,7 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
       db.run(users.find(createChatRequest.participants.map(new UserId(_)))).flatMap{foundUsers =>
         val allSpecifiedUsersExists = foundUsers.size == createChatRequest.participants.size
         if (allSpecifiedUsersExists) {
-          db.run(chats.insertFromRequest(createChatRequest, user)).map{
+          db.run(chats.insertFromRequest(createChatRequest, userId)).map{
             case (chat: Chat, participants: Seq[Participant]) => ChatWithParticipants(chat, participants)
           }
         } else {
