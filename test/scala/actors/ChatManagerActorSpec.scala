@@ -14,7 +14,7 @@ import akka.pattern.ask
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class ChatManagerActorSpec extends ActorTestSpec {
+class ChatManagerActorSpec extends ActorSpec {
 
   var chatManagerActor: TestActorRef[ChatManagerActor] = _
 

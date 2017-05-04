@@ -2,9 +2,9 @@ package scala.data.impl
 
 import pl.pgizka.gsenger.dtos.chats.CreateChatRequestDto
 
-import scala.data.BasicSpecWithDefaultScenario
+import scala.data.BasicSpec
 
-class ParticipantRepositorySpec extends BasicSpecWithDefaultScenario {
+class ParticipantRepositorySpec extends BasicSpec {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 

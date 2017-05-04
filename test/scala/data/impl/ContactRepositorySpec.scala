@@ -3,10 +3,10 @@ package scala.data.impl
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.services.facebook.FbUser
 
-import scala.data.{BasicSpec, BasicSpecWithDefaultScenario}
+import scala.data.BasicSpec
 
 
-class ContactRepositorySpec extends BasicSpecWithDefaultScenario {
+class ContactRepositorySpec extends BasicSpec {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 

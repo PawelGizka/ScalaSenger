@@ -1,28 +1,27 @@
 package scala.controllers
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.ActorMaterializer
-import play.api.libs.json.{JsValue, Json}
-import play.api.test.FakeRequest
-import play.api.test.Helpers._
-import org.mockito.Mockito._
-import org.specs2.mock.mockito.MockitoMatchers._
+
 import pl.pgizka.gsenger.actors.{ChatManagerActor, UserManagerActor}
 import pl.pgizka.gsenger.controllers.user.UserController
 import pl.pgizka.gsenger.dtos.users.{UserFacebookLoginRequestDto, UserLoginRegistrationResponseDto}
 import pl.pgizka.gsenger.services.facebook.{FacebookService, FbUser, realFacebookService}
 import pl.pgizka.gsenger.startup.InitialData
 
+import akka.actor.ActorRef
+import akka.stream.ActorMaterializer
+
+import play.api.libs.json.Json
+import play.api.test.FakeRequest
+import play.api.test.Helpers._
+
+import org.mockito.Mockito._
+import org.specs2.mock.mockito.MockitoMatchers._
+
 import scala.Utils._
-import scala.concurrent.{Await, Awaitable, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
 
-class UserControllerSpec extends ControllerSpecWithDefaultScenario {
-  implicit lazy val system = ActorSystem()
-
-  import profile.api._
-  import pl.pgizka.gsenger.startup.DefaultScenario._
+class UserControllerSpec extends ControllerSpec {
 
   val facebookService = mock[FacebookService]
   var userController: UserController = _
@@ -30,23 +29,14 @@ class UserControllerSpec extends ControllerSpecWithDefaultScenario {
   var chatManager: ActorRef = _
   var userManager: ActorRef = _
 
-  before {
-    db.run(createDefaultScenarioAction(this)).futureValue
-
-    val initialData = await(InitialData.load(this))
-
+  override def onBefore(initialData: InitialData): Unit = {
     chatManager = system.actorOf(ChatManagerActor.props(this, initialData), "chatManager")
     userManager = system.actorOf(UserManagerActor.props(this, initialData, realFacebookService, chatManager), "userManager")
 
     userController = new UserController(this, facebookService, system, ActorMaterializer()(system), userManager, chatManager)
   }
 
-  def await[T](awaitable: Awaitable[T]): T = {
-    Await.result(awaitable, Duration.Inf)
-  }
-
-  after {
-    db.run(schema.drop).futureValue
+  override def onAfter(): Unit = {
     system.stop(chatManager)
     system.stop(userManager)
   }

@@ -1,8 +1,8 @@
 package scala.data.impl
 
-import scala.data.{BasicSpec, BasicSpecWithDefaultScenario}
+import scala.data.BasicSpec
 
-class TokenRepositorySpec extends BasicSpecWithDefaultScenario {
+class TokenRepositorySpec extends BasicSpec {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 

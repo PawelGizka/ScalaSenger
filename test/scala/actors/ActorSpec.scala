@@ -10,7 +10,7 @@ import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.startup.InitialData
 
 
-class ActorTestSpec extends WordSpec with MustMatchers with OptionValues with BeforeAndAfter with BeforeAndAfterAll with ScalaFutures with MockitoSugar
+class ActorSpec extends WordSpec with MustMatchers with OptionValues with BeforeAndAfter with BeforeAndAfterAll with ScalaFutures with MockitoSugar
   with H2DBConnector with DAL {
 
   import profile.api._

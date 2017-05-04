@@ -1,9 +1,9 @@
 package scala.data.impl
 
-import scala.data.BasicSpecWithDefaultScenario
+import scala.data.BasicSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MessageRepositorySpec extends BasicSpecWithDefaultScenario {
+class MessageRepositorySpec extends BasicSpec {
 
   import profile.api._
   import pl.pgizka.gsenger.startup.DefaultScenario._

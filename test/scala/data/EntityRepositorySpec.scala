@@ -1,6 +1,8 @@
 package scala.data
 
 import org.scalatest.time.{Seconds, Span}
+import pl.pgizka.gsenger.startup.InitialData
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class EntityRepositorySpec extends BasicSpec with TestEntityRepository {
@@ -10,18 +12,18 @@ class EntityRepositorySpec extends BasicSpec with TestEntityRepository {
   import profile.api._
 
   val testData = List(
-    TestEntity(Some(TestEntityId(1)), "Entity 1"),
-    TestEntity(Some(TestEntityId(2)), "Entity 2")
+  TestEntity(Some(TestEntityId(1)), "Entity 1"),
+  TestEntity(Some(TestEntityId(2)), "Entity 2")
   )
 
-  before {
+  override def onBefore(initialData: InitialData): Unit = {
     db.run(DBIO.seq(
-      testEntities.schema.create,
-      testEntities ++= testData
+    testEntities.schema.create,
+    testEntities ++= testData
     )).futureValue
   }
 
-  after {
+  override def onAfter(): Unit = {
     db.run(testEntities.schema.drop).futureValue
   }
 
@@ -87,5 +89,6 @@ class EntityRepositorySpec extends BasicSpec with TestEntityRepository {
       db.run(testEntities.find(TestEntityId(1))).futureValue must equal (None)
     }
   }
+
 }
 

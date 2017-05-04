@@ -1,6 +1,5 @@
 package scala.controllers
 
-import akka.actor.{ActorRef, ActorSystem}
 import pl.pgizka.gsenger.Utils.formatSequenceMessage
 import pl.pgizka.gsenger.actors.{ChatManagerActor, UserManagerActor}
 import pl.pgizka.gsenger.controllers.chat.ChatController
@@ -9,6 +8,8 @@ import pl.pgizka.gsenger.errors._
 import pl.pgizka.gsenger.model.{Chat, ChatId, ChatType, UserId}
 import pl.pgizka.gsenger.services.facebook.realFacebookService
 import pl.pgizka.gsenger.startup.InitialData
+import pl.pgizka.gsenger.startup.DefaultScenario._
+
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.FakeRequest
@@ -17,35 +18,26 @@ import play.api.test.Helpers._
 import scala.Utils._
 import scala.concurrent.Future
 
+import akka.actor.ActorRef
 
-class ChatsControllerSpec extends ControllerSpecWithDefaultScenario {
-  implicit lazy val system = ActorSystem()
-
-  import profile.api._
-  import pl.pgizka.gsenger.startup.DefaultScenario._
+class ChatsControllerSpec extends ControllerSpec {
 
   var chatManager: ActorRef = _
   var userManager: ActorRef = _
 
   var chatsController: ChatController = _
 
-  before {
-    db.run(createDefaultScenarioAction(this)).futureValue
-
-    val initialData = await(InitialData.load(this))
-
+  override def onBefore(initialData: InitialData): Unit = {
     chatManager = system.actorOf(ChatManagerActor.props(this, initialData), "chatManager")
     userManager = system.actorOf(UserManagerActor.props(this, initialData, realFacebookService, chatManager), "userManager")
 
     chatsController = new ChatController(this, system, chatManager)
   }
 
-  after {
-    db.run(schema.drop).futureValue
+  override def onAfter(): Unit = {
     system.stop(chatManager)
     system.stop(userManager)
   }
-
 
   "listAllChatsWithParticipantInfo" should {
     "return 200 and list of all chats with Participant info for specified user" in {

@@ -3,9 +3,9 @@ package scala.data.impl
 import pl.pgizka.gsenger.dtos.users.UserFacebookLoginRequestDto
 import pl.pgizka.gsenger.model._
 
-import scala.data.{BasicSpec, BasicSpecWithDefaultScenario}
+import scala.data.BasicSpec
 
-class DeviceRepositorySpec extends BasicSpecWithDefaultScenario {
+class DeviceRepositorySpec extends BasicSpec {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 

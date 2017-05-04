@@ -5,10 +5,10 @@ import pl.pgizka.gsenger.dtos.users.UserFacebookLoginRequestDto
 import pl.pgizka.gsenger.model.UserId
 import pl.pgizka.gsenger.services.facebook.FbUser
 
-import scala.data.BasicSpecWithDefaultScenario
+import scala.data.BasicSpec
 
 
-class UserRepositorySpec extends BasicSpecWithDefaultScenario {
+class UserRepositorySpec extends BasicSpec {
   import scala.concurrent.ExecutionContext.Implicits.global
   import profile.api._
 
