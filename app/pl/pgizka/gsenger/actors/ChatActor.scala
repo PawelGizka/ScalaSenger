@@ -1,17 +1,15 @@
 package pl.pgizka.gsenger.actors
 
 import pl.pgizka.gsenger.actors.ChatActor._
-import pl.pgizka.gsenger.controllers.message.CreateMessageRequest
 import pl.pgizka.gsenger.errors._
 import pl.pgizka.gsenger.model.{ChatId, Message, Participant, UserId}
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.actors.ActorsUtils.handleDbComplete
-
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
+import pl.pgizka.gsenger.dtos.messages.CreateMessageRequestDto
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
 
 object ChatActor {
 
@@ -25,7 +23,7 @@ object ChatActor {
   def actorSelection(chatId: ChatId)(implicit actorSystem: ActorSystem): ActorSelection =
     actorSystem.actorSelection(s"/user/chatManager/${actorName(chatId)}")
 
-  case class CreateNewMessage(sender: UserId, createMessageRequest: CreateMessageRequest, requestContext: RequestContext = RequestContext())
+  case class CreateNewMessage(sender: UserId, createMessageRequest: CreateMessageRequestDto, requestContext: RequestContext = RequestContext())
 
   //responses
   case class CreateNewMessageResponse(message: Message, override val requestContext: RequestContext) extends ActorResponse

@@ -1,15 +1,12 @@
 package pl.pgizka.gsenger.persistance.impl
 
-import java.time.Instant
-
-import pl.pgizka.gsenger.controllers.user.UserFacebookLoginRequest
+import pl.pgizka.gsenger.dtos.users.UserFacebookLoginRequestDto
 import pl.pgizka.gsenger.model.{User, UserId}
 import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
 import pl.pgizka.gsenger.services.facebook.FbUser
 import slick.profile.SqlProfile.ColumnOption.Nullable
 
 import scala.concurrent.ExecutionContext
-//import scala.concurrent.ExecutionContext.Implicits.global
 
 trait UserRepository extends EntityRepository {this: Profile =>
 
@@ -46,7 +43,7 @@ trait UserRepository extends EntityRepository {this: Profile =>
 
     def findByFacebookIds(facebookIds: Seq[String]): DBIO[Seq[User]] = users.filter(_.facebookId inSetBind facebookIds).result
 
-    def insertFacebookUser(fbUser: FbUser, userFacebookLoginRequest: UserFacebookLoginRequest)(implicit ec: ExecutionContext): DBIO[User] = {
+    def insertFacebookUser(fbUser: FbUser, userFacebookLoginRequest: UserFacebookLoginRequestDto)(implicit ec: ExecutionContext): DBIO[User] = {
       findByFacebookId(fbUser.id).flatMap {
         case Some(user) => update(user.copy(facebookToken = Some(userFacebookLoginRequest.facebookToken)))
         case None => insert(new User(fbUser, userFacebookLoginRequest))

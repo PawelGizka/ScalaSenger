@@ -1,6 +1,6 @@
 package pl.pgizka.gsenger.controllers.user
 
-import pl.pgizka.gsenger.actors.UserActor.GetFriends
+import pl.pgizka.gsenger.actors.UserActor.GetContacts
 import pl.pgizka.gsenger.actors.UserManagerActor.UserAdded
 import pl.pgizka.gsenger.actors.{ActorErrorResponse, ActorResponse, UserActor, WebSocketActor}
 import pl.pgizka.gsenger.controllers.{CommonController, RestApiErrorResponse}
@@ -15,6 +15,7 @@ import scala.concurrent.Future
 import akka.actor.{ActorNotFound, ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.stream.Materializer
+import pl.pgizka.gsenger.dtos.users._
 import play.api.mvc._
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.{JsValue, Json}
@@ -31,7 +32,7 @@ class UserController(override val dataAccess: DAL with DatabaseSupport,
   import profile.api._
 
   def loginFacebookUser: Action[JsValue] = LoggAction.async(parse.json) { request =>
-    val userRegistrationRequest = request.body.as[UserFacebookLoginRequest]
+    val userRegistrationRequest = request.body.as[UserFacebookLoginRequestDto]
 
     facebookService.fetchFacebookUser(userRegistrationRequest.facebookToken).flatMap {
       case Right(fbUser) =>
@@ -45,18 +46,18 @@ class UserController(override val dataAccess: DAL with DatabaseSupport,
         db.run(dbAction) map {
           case (user, token) =>
             userManager ! UserAdded(user)
-            Ok(toJson(UserLoginRegistrationResponse(user.id.get.value, token.token)))
+            Ok(toJson(UserLoginRegistrationResponseDto(user.id.get.value, token.token)))
         } recover databaseError
 
       case Left(errorInfo) => Future(BadRequest(toJson(new RestApiErrorResponse(FetchFacebookDataError(errorInfo)))))
     }
   }
 
-  def getFriends: Action[JsValue] = AuthenticateWithLogAction.async(parse.json) { request =>
-    val getFriendsRequest = request.body.as[GetFriendsRequest]
+  def getContacts: Action[JsValue] = AuthenticateWithLogAction.async(parse.json) { request =>
+    val getFriendsRequest = request.body.as[GetContactsRequestDto]
 
-    UserActor.actorSelection(request.user.id.get) ? GetFriends(getFriendsRequest) map {
-      case UserActor.GetFriendsResponse(friends: Seq[Friend], _) => Ok(Json.toJson(new GetFriendsResponse(friends)))
+    UserActor.actorSelection(request.user.id.get) ? GetContacts(getFriendsRequest) map {
+      case UserActor.GetContactsResponse(contacts: Seq[ContactDto], _) => Ok(Json.toJson(new GetContactsResponseDto(contacts)))
       case ActorErrorResponse(error: Error, _) => BadRequest(Json.toJson(new RestApiErrorResponse(error)))
       case e => BadRequest
     } recover actorAskError

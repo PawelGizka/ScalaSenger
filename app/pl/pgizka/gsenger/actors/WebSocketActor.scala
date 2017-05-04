@@ -1,12 +1,9 @@
 package pl.pgizka.gsenger.actors
 
-import pl.pgizka.gsenger.controllers.message.CreateMessageRequest
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.Error
 import pl.pgizka.gsenger.actors.WebSocketRequest._
 import pl.pgizka.gsenger.actors.WebSocketActor.{AddedToChat, NewMessage}
-import pl.pgizka.gsenger.controllers.chat.{ChatInfo, CreateChatRequest}
-import pl.pgizka.gsenger.controllers.user.{Friend, GetFriendsRequest, GetFriendsResponse}
 import pl.pgizka.gsenger.errors.DatabaseError
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
@@ -15,6 +12,9 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.{ask, pipe}
 import pl.pgizka.gsenger.actors.ActorsUtils.databaseError
+import pl.pgizka.gsenger.dtos.chats.{ChatDto, CreateChatRequestDto}
+import pl.pgizka.gsenger.dtos.messages.{CreateMessageRequestDto, MessageDto}
+import pl.pgizka.gsenger.dtos.users.{GetContactsRequestDto, GetContactsResponseDto}
 
 object WebSocketActor {
 
@@ -43,25 +43,30 @@ class WebSocketActor (out: ActorRef,
     userActor ! UserActor.NewWebSocketConnection(self)
   }
 
+  @scala.throws[Exception](classOf[Exception])
+  override def postStop(): Unit = {
+    userActor ! UserActor.WebSocketConnectionClosed(self)
+  }
+
   override def receive: Receive = {
 
     case NewMessage(message) =>
-      out ! WebSocketPush("newMessage", Json.toJson(message))
+      out ! WebSocketPush("newMessage", Json.toJson(new MessageDto(message)))
 
     case AddedToChat(chat, participants) =>
-      out ! WebSocketPush("addedToChat", Json.toJson(new ChatInfo(chat, participants)))
+      out ! WebSocketPush("addedToChat", Json.toJson(new ChatDto(chat, participants)))
 
     case ActorErrorResponse(error: Error, requestContext) =>
       out ! new WebSocketErrorResponse(requestContext, error)
 
     case ChatActor.CreateNewMessageResponse(message, requestContext)=>
-      out ! new WebSocketResponse(requestContext, Json.toJson(message))
+      out ! new WebSocketResponse(requestContext, Json.toJson(new MessageDto(message)))
 
     case ChatManagerActor.CreateNewChatResponse(chat, participants, requestContext) =>
-      out ! new WebSocketResponse(requestContext, Json.toJson(new ChatInfo(chat, participants)))
+      out ! new WebSocketResponse(requestContext, Json.toJson(new ChatDto(chat, participants)))
 
-    case UserActor.GetFriendsResponse(friends, requestContext) =>
-      out ! new WebSocketResponse(requestContext, Json.toJson(new GetFriendsResponse(friends)))
+    case UserActor.GetContactsResponse(contactsDtos, requestContext) =>
+      out ! new WebSocketResponse(requestContext, Json.toJson(new GetContactsResponseDto(contactsDtos)))
 
     case js: JsValue =>
       val request = js.as[WebSocketRequest]
@@ -71,15 +76,15 @@ class WebSocketActor (out: ActorRef,
 
       method match {
         case "createNewMessage" =>
-          val createMessageRequest = content.as[CreateMessageRequest]
+          val createMessageRequest = content.as[CreateMessageRequestDto]
           ChatActor.actorSelection(createMessageRequest.chatId)(context.system) forward
             ChatActor.CreateNewMessage(userId, createMessageRequest, new RequestContext(request))
 
         case "createNewChat" =>
-          chatManagerActor ! ChatManagerActor.CreateNewChat(content.as[CreateChatRequest], userId, new RequestContext(request))
+          chatManagerActor ! ChatManagerActor.CreateNewChat(content.as[CreateChatRequestDto], userId, new RequestContext(request))
 
         case "getFriends" =>
-          userActor ! UserActor.GetFriends(content.as[GetFriendsRequest], new RequestContext(request))
+          userActor ! UserActor.GetContacts(content.as[GetContactsRequestDto], new RequestContext(request))
 
         case "listChats" =>
           db.run(chats.findAllChatsWithParticipants(userId)).map{chatsInfos =>
@@ -89,8 +94,4 @@ class WebSocketActor (out: ActorRef,
 
   }
 
-  @scala.throws[Exception](classOf[Exception])
-  override def postStop(): Unit = {
-    userActor ! UserActor.WebSocketConnectionClosed(self)
-  }
 }

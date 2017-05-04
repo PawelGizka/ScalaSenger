@@ -1,15 +1,13 @@
 package pl.pgizka.gsenger.actors
 
 import pl.pgizka.gsenger.actors.UserActor._
-import pl.pgizka.gsenger.controllers.message.CreateMessageRequest
-import pl.pgizka.gsenger.controllers.user.{Friend, GetFriendsRequest}
 import pl.pgizka.gsenger.errors.{DatabaseError, Forbidden}
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.services.facebook.FacebookService
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
-import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
+import pl.pgizka.gsenger.dtos.users.{ContactDto, GetContactsRequestDto}
 
 import scala.concurrent.Future
 
@@ -29,10 +27,10 @@ object UserActor {
   case class NewMessage(message: Message)
   case class AddedToChat(chat: Chat, participants: Seq[Participant])
 
-  case class GetFriends(getFriendsRequest: GetFriendsRequest, requestContext: RequestContext = RequestContext())
+  case class GetContacts(getContactsRequest: GetContactsRequestDto, requestContext: RequestContext = RequestContext())
 
   //responses
-  case class GetFriendsResponse(friends: Seq[Friend], override val requestContext: RequestContext) extends ActorResponse
+  case class GetContactsResponse(contacts: Seq[ContactDto], override val requestContext: RequestContext) extends ActorResponse
 
   case class NewWebSocketConnection(webSocketActor: ActorRef)
   case class WebSocketConnectionClosed(webSocketActor: ActorRef)
@@ -49,6 +47,7 @@ class UserActor (user: User,
 
   import dataAccess.db
   import dataAccess.profile.api._
+
   private var webSockets: List[ActorRef] = List()
 
   private var chats: Map[ChatId, Chat] = Map()
@@ -64,24 +63,25 @@ class UserActor (user: User,
 
   override def receive: Receive = {
 
-    case GetFriends(getFriendsRequest, requestContext) =>
+    case GetContacts(getFriendsRequest, requestContext) =>
       val sender = context.sender()
 
-      case class Result(contactsUpdated: Seq[(User, Contact)], friendsUpdated: Seq[Friend])
+      case class Result(contactsUpdated: Seq[(User, Contact)], contactsUpdatedDtos: Seq[ContactDto])
 
-      def friendsFound(dbAction: DBIO[Seq[(User, Contact)]]): Future[Result] = {
+      def contactsFound(dbAction: DBIO[Seq[(User, Contact)]]): Future[Result] = {
         db.run(dbAction).map{contacts =>
-          Result(contacts, contacts.map(tuple => new Friend(tuple._1)))
+          Result(contacts, contacts.map(tuple => new ContactDto(tuple._1)))
         }
       }
 
       facebookService.fetchFacebookFriends(user.facebookToken.get).flatMap{
-        case Right(fbUsers) => friendsFound(dataAccess.contacts.updateContacts(user, Some(fbUsers), getFriendsRequest.phoneNumbers))
-        case Left(_) => friendsFound(dataAccess.contacts.updateContacts(user, None, getFriendsRequest.phoneNumbers))
+        case Right(fbUsers) => contactsFound(dataAccess.contacts.updateContacts(user, Some(fbUsers), getFriendsRequest.phoneNumbers))
+        case Left(_) => contactsFound(dataAccess.contacts.updateContacts(user, None, getFriendsRequest.phoneNumbers))
+
       } onComplete ActorsUtils.handleDbComplete(sender, requestContext) {
-        case Result(contactsUpdated, friendsUpdated) =>
+        case Result(contactsUpdated, contactsUpdatedDtos) =>
           self ! ContactsUpdated(contactsUpdated)
-          sender ! GetFriendsResponse(friendsUpdated, requestContext)
+          sender ! GetContactsResponse(contactsUpdatedDtos, requestContext)
       }
 
     case ContactsUpdated(contactsUpdated) =>
@@ -91,7 +91,6 @@ class UserActor (user: User,
       webSockets.foreach(webSocket => webSocket ! WebSocketActor.NewMessage(message))
 
     case AddedToChat(chat, participants) =>
-      println("added to chat")
       chats = chats.+((chat.id.get, chat))
       webSockets.foreach{webSocket =>
         webSocket ! WebSocketActor.AddedToChat(chat, participants)

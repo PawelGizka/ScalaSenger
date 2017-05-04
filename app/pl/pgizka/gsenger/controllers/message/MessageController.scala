@@ -12,6 +12,7 @@ import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.startup.Implicits.timeout
 import akka.pattern._
 import akka.actor.ActorSystem
+import pl.pgizka.gsenger.dtos.messages.{CreateMessageRequestDto, MessageDto}
 
 import scala.concurrent.Future
 import play.api.libs.json.{JsValue, Json}
@@ -25,11 +26,11 @@ class MessageController(override val dataAccess: DAL with DatabaseSupport, impli
   import profile.api._
 
   def createMessage: Action[JsValue] = AuthenticateWithLogAction.async(parse.json) { request =>
-    val createMessageRequest = request.body.as[CreateMessageRequest]
+    val createMessageRequest = request.body.as[CreateMessageRequestDto]
 
     def tryInsert = {
       ChatActor.actorSelection(createMessageRequest.chatId) ? CreateNewMessage(request.user.id.get, createMessageRequest) map {
-        case ChatActor.CreateNewMessageResponse(message: Message, _) => Ok(Json.toJson(message))
+        case ChatActor.CreateNewMessageResponse(message: Message, _) => Ok(Json.toJson(new MessageDto(message)))
         case ActorErrorResponse(error: Error, _) => BadRequest(Json.toJson(new RestApiErrorResponse(error)))
         case e => BadRequest
       } recover actorAskError

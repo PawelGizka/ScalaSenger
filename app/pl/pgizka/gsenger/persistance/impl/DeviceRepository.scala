@@ -2,7 +2,7 @@ package pl.pgizka.gsenger.persistance.impl
 
 import java.time.Instant
 
-import pl.pgizka.gsenger.controllers.user.UserFacebookLoginRequest
+import pl.pgizka.gsenger.dtos.users.UserFacebookLoginRequestDto
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
 import slick.profile.SqlProfile.ColumnOption.Nullable
@@ -33,7 +33,7 @@ trait DeviceRepository extends EntityRepository {this: Profile with UserReposito
 
     def findByDeviceId(deviceId: String): DBIO[Option[Device]] = devices.filter(_.deviceId === deviceId).result.headOption
 
-    def insertIfNecessary(owner: User, userFacebookLoginRequest: UserFacebookLoginRequest)(implicit executionContext: ExecutionContext): DBIO[Device] = {
+    def insertIfNecessary(owner: User, userFacebookLoginRequest: UserFacebookLoginRequestDto)(implicit executionContext: ExecutionContext): DBIO[Device] = {
       findByDeviceId(userFacebookLoginRequest.deviceId).flatMap{
         case Some(device) => update(device.copy(gcmPushToken = userFacebookLoginRequest.gcmToken))
         case None => insert(new Device(owner, userFacebookLoginRequest))

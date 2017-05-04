@@ -1,7 +1,7 @@
 package scala.data.impl
 
 
-import pl.pgizka.gsenger.controllers.user.UserFacebookLoginRequest
+import pl.pgizka.gsenger.dtos.users.UserFacebookLoginRequestDto
 import pl.pgizka.gsenger.model.UserId
 import pl.pgizka.gsenger.services.facebook.FbUser
 
@@ -29,7 +29,7 @@ class UserRepositorySpec extends BasicSpecWithDefaultScenario {
   "insertFacebookUser" should {
     "should insert new record if the given facebookId is not found" in {
       val fbUser = new FbUser("facebook id 3")
-      val loginRequest = UserFacebookLoginRequest(123, "deviceId", "gcmToken", "facebook token 3")
+      val loginRequest = UserFacebookLoginRequestDto(123, "deviceId", "gcmToken", "facebook token 3")
       val result = db.run(users.insertFacebookUser(fbUser, loginRequest)).futureValue
 
       result.facebookToken.get must equal ("facebook token 3")
@@ -37,7 +37,7 @@ class UserRepositorySpec extends BasicSpecWithDefaultScenario {
 
     "should update the existing record if the given facebookId exists" in {
       val fbUser = new FbUser("facebook id 1")
-      val loginRequest = UserFacebookLoginRequest(123, "deviceId", "gcmToken", "facebook token 3")
+      val loginRequest = UserFacebookLoginRequestDto(123, "deviceId", "gcmToken", "facebook token 3")
       db.run(users.insertFacebookUser(fbUser, loginRequest)).futureValue
 
       val result = db.run(users.get(UserId(1))).futureValue

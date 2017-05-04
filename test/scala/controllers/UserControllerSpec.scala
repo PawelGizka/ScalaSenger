@@ -8,7 +8,8 @@ import play.api.test.Helpers._
 import org.mockito.Mockito._
 import org.specs2.mock.mockito.MockitoMatchers._
 import pl.pgizka.gsenger.actors.{ChatManagerActor, UserManagerActor}
-import pl.pgizka.gsenger.controllers.user.{UserController, UserFacebookLoginRequest, UserLoginRegistrationResponse}
+import pl.pgizka.gsenger.controllers.user.UserController
+import pl.pgizka.gsenger.dtos.users.{UserFacebookLoginRequestDto, UserLoginRegistrationResponseDto}
 import pl.pgizka.gsenger.services.facebook.{FacebookService, FbUser, realFacebookService}
 import pl.pgizka.gsenger.startup.InitialData
 
@@ -50,7 +51,7 @@ class UserControllerSpec extends ControllerSpecWithDefaultScenario {
     system.stop(userManager)
   }
 
-  val loginRequest = UserFacebookLoginRequest(123, "device id 2", "gcm token 2", "facebook token 2")
+  val loginRequest = UserFacebookLoginRequestDto(123, "device id 2", "gcm token 2", "facebook token 2")
 
   "loginFacebookUser" should {
     "return 200, new user id = 2 and access token when inserting new user" in {
@@ -62,7 +63,7 @@ class UserControllerSpec extends ControllerSpecWithDefaultScenario {
 
       status(response) must equal(200)
 
-      val responseBody = contentAs[UserLoginRegistrationResponse](response)
+      val responseBody = contentAs[UserLoginRegistrationResponseDto](response)
       responseBody.userId must equal(6)
     }
 

@@ -3,7 +3,7 @@ package pl.pgizka.gsenger.model
 import java.time.Instant
 
 import pl.pgizka.gsenger.Utils.Js
-import pl.pgizka.gsenger.controllers.user.UserFacebookLoginRequest
+import pl.pgizka.gsenger.dtos.users.UserFacebookLoginRequestDto
 import pl.pgizka.gsenger.services.facebook.FbUser
 import play.api.libs.json.{Json, OFormat}
 
@@ -27,7 +27,7 @@ case class User(
   facebookId: Option[String],
   facebookToken: Option[String]) extends Entity[UserId] {
 
-  def this (fbUser: FbUser, userFacebookLoginRequest: UserFacebookLoginRequest) =
+  def this (fbUser: FbUser, userFacebookLoginRequest: UserFacebookLoginRequestDto) =
     this(
       None,
 

@@ -1,6 +1,6 @@
 package pl.pgizka.gsenger.persistance.impl
 
-import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
+import pl.pgizka.gsenger.dtos.chats.CreateChatRequestDto
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.{EntityRepository, Profile}
 import slick.profile.SqlProfile.ColumnOption.Nullable
@@ -29,9 +29,9 @@ trait ParticipantRepository extends EntityRepository {this: ChatRepository with 
 
     override def copyEntityFields(entity: Participant, id: Option[ParticipantId]): Participant = entity.copy(id = id)
 
-    def insertFromCreateChatRequest(createChatRequest: CreateChatRequest, chat: Chat, userId: UserId): DBIO[Seq[Participant]] = {
-      val participantsIds = (createChatRequest.participants :+ userId.value).distinct
-      insert(participantsIds.map(participantId => new Participant(chat, UserId(participantId))))
+    def insertFromCreateChatRequest(createChatRequest: CreateChatRequestDto, chat: Chat, userId: UserId): DBIO[Seq[Participant]] = {
+      val participantsIds = (createChatRequest.participants :+ userId).distinct
+      insert(participantsIds.map(userId => new Participant(chat, userId)))
     }
 
     def isUserParticipant(chatId: ChatId, userId: UserId): DBIO[Boolean] =

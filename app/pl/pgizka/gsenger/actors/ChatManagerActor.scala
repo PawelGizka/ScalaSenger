@@ -2,26 +2,24 @@ package pl.pgizka.gsenger.actors
 
 import pl.pgizka.gsenger.Utils.{formatSequenceMessage, getNotFoundElements}
 import pl.pgizka.gsenger.actors.ChatManagerActor.{ChatCreated, CreateNewChat, CreateNewChatResponse}
-import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
-import pl.pgizka.gsenger.errors.{CouldNotFindUsersError, DatabaseError}
+import pl.pgizka.gsenger.errors.CouldNotFindUsersError
 import pl.pgizka.gsenger.model._
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
-import pl.pgizka.gsenger.startup.{InitialData, boot}
+import pl.pgizka.gsenger.startup.InitialData
 import pl.pgizka.gsenger.actors.ActorsUtils.handleDbComplete
-import akka.pattern._
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
+import pl.pgizka.gsenger.dtos.chats.{CreateChatRequestDto}
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
 
+import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
 
 object ChatManagerActor {
 
   def props(dataAccess: DAL with DatabaseSupport,
             initialData: InitialData): Props = Props(classOf[ChatManagerActor], dataAccess, initialData)
 
-  case class CreateNewChat(createChatRequest: CreateChatRequest, userId: UserId, requestContext: RequestContext = RequestContext())
+  case class CreateNewChat(createChatRequest: CreateChatRequestDto, userId: UserId, requestContext: RequestContext = RequestContext())
 
   //responses
   case class CreateNewChatResponse(chat: Chat,
@@ -30,7 +28,7 @@ object ChatManagerActor {
 
   private case class ChatsLoaded(chats: Seq[Chat])
   private case class ChatCreated(chat: Chat, participants: Seq[Participant],
-                                 createChatRequest: CreateChatRequest,
+                                 createChatRequest: CreateChatRequestDto,
                                  sender: ActorRef,
                                  requestContext: RequestContext)
 }
@@ -65,7 +63,7 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
       // is unchecked since it is eliminated by erasure
       case class ChatWithParticipants(chat: Chat, participants: Seq[Participant])
 
-      db.run(users.find(createChatRequest.participants.map(new UserId(_)))).flatMap{foundUsers =>
+      db.run(users.find(createChatRequest.participants)).flatMap{foundUsers =>
         val allSpecifiedUsersExists = foundUsers.size == createChatRequest.participants.size
         if (allSpecifiedUsersExists) {
           db.run(chats.insertFromRequest(createChatRequest, userId)).map(ChatWithParticipants.tupled(_))

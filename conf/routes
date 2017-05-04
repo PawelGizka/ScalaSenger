@@ -4,10 +4,10 @@
 
 
 POST     /user/register         pl.pgizka.gsenger.controllers.user.UserController.loginFacebookUser
-GET      /user/getFriends       pl.pgizka.gsenger.controllers.user.UserController.getFriends
+GET      /user/getContacts       pl.pgizka.gsenger.controllers.user.UserController.getContacts
 
 PUT      /chat/create           pl.pgizka.gsenger.controllers.chat.ChatController.createChat
-GET      /chat/listAll          pl.pgizka.gsenger.controllers.chat.ChatController.listAllChatsWithParticipantInfo
+GET      /chat/getAll          pl.pgizka.gsenger.controllers.chat.ChatController.getAllChatsWithParticipantInfo
 
 PUT      /message/create        pl.pgizka.gsenger.controllers.message.MessageController.createMessage
 

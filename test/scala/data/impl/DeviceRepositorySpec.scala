@@ -1,6 +1,6 @@
 package scala.data.impl
 
-import pl.pgizka.gsenger.controllers.user.UserFacebookLoginRequest
+import pl.pgizka.gsenger.dtos.users.UserFacebookLoginRequestDto
 import pl.pgizka.gsenger.model._
 
 import scala.data.{BasicSpec, BasicSpecWithDefaultScenario}
@@ -25,12 +25,12 @@ class DeviceRepositorySpec extends BasicSpecWithDefaultScenario {
 
   "insertIfNecessary" should {
     "should insert new record if the given deviceId is not found" in {
-      val loginRequest = UserFacebookLoginRequest(100, "device id 2", "gcm token 2", "facebook token 2")
+      val loginRequest = UserFacebookLoginRequestDto(100, "device id 2", "gcm token 2", "facebook token 2")
       db.run(devices.insertIfNecessary(user2, loginRequest)).futureValue.gcmPushToken must equal ("gcm token 2")
     }
 
     "should update the existing record if the given deviceId exists" in {
-      val loginRequest = UserFacebookLoginRequest(100, "device id 1", "gcm token 3", "facebook token 2")
+      val loginRequest = UserFacebookLoginRequestDto(100, "device id 1", "gcm token 3", "facebook token 2")
       val result = db.run(devices.insertIfNecessary(user2, loginRequest)).futureValue
 
       result.id.get must equal (DeviceId(1))

@@ -3,7 +3,7 @@ package pl.pgizka.gsenger.model
 import java.time.Instant
 
 import pl.pgizka.gsenger.Utils.Js
-import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
+import pl.pgizka.gsenger.dtos.chats.CreateChatRequestDto
 import play.api.libs.json.{Json, OFormat}
 
 case class ChatId(value: Long) extends EntityId(value)
@@ -19,7 +19,7 @@ case class Chat(
   name: Option[String],
   started: Instant) extends Entity[ChatId] {
 
-  def this(createChatRequest: CreateChatRequest) =
+  def this(createChatRequest: CreateChatRequestDto) =
     this(
       None,
 

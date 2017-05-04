@@ -3,19 +3,19 @@ package scala.controllers
 import akka.actor.{ActorRef, ActorSystem}
 import pl.pgizka.gsenger.Utils.formatSequenceMessage
 import pl.pgizka.gsenger.actors.{ChatManagerActor, UserManagerActor}
-import pl.pgizka.gsenger.controllers.chat.{ChatController, CreateChatRequest, CreateChatResponse, ListAllChatsWithParticipantInfoResponse}
+import pl.pgizka.gsenger.controllers.chat.ChatController
+import pl.pgizka.gsenger.dtos.chats.{CreateChatRequestDto, GetAllChatsWithParticipantInfoDto}
 import pl.pgizka.gsenger.errors._
-import pl.pgizka.gsenger.model.{Chat, ChatId, ChatType}
+import pl.pgizka.gsenger.model.{Chat, ChatId, ChatType, UserId}
 import pl.pgizka.gsenger.services.facebook.realFacebookService
 import pl.pgizka.gsenger.startup.InitialData
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{AnyContentAsEmpty, Request, Result}
+import play.api.libs.json.Json
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
 import scala.Utils._
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Awaitable, Future}
+import scala.concurrent.Future
 
 
 class ChatsControllerSpec extends ControllerSpecWithDefaultScenario {
@@ -50,11 +50,11 @@ class ChatsControllerSpec extends ControllerSpecWithDefaultScenario {
   "listAllChatsWithParticipantInfo" should {
     "return 200 and list of all chats with Participant info for specified user" in {
       val request = FakeRequest().withHeaders("accessToken" -> token1.token)
-      val response: Future[Result] = chatsController.listAllChatsWithParticipantInfo.apply(request)
+      val response: Future[Result] = chatsController.getAllChatsWithParticipantInfo.apply(request)
 
       status(response) must equal(200)
 
-      val responseBody = contentAs[ListAllChatsWithParticipantInfoResponse](response)
+      val responseBody = contentAs[GetAllChatsWithParticipantInfoDto](response)
 
       responseBody.chats must have size 2
 
@@ -67,7 +67,7 @@ class ChatsControllerSpec extends ControllerSpecWithDefaultScenario {
 
   "createChat" should {
     "return 200 and newly created chat id" in {
-      val createChatRequest = CreateChatRequest(ChatType.groupChat, None, Seq(user2.id.get.value, user3.id.get.value))
+      val createChatRequest = CreateChatRequestDto(ChatType.groupChat, None, Seq(user2.id.get, user3.id.get))
 
       val request = FakeRequest().withHeaders("accessToken" -> token1.token).withBody(Json.toJson(createChatRequest))
       val response = chatsController.createChat.apply(request)
@@ -79,8 +79,8 @@ class ChatsControllerSpec extends ControllerSpecWithDefaultScenario {
     }
 
     "return 400 and error response with detail info when there is no users with specified ids" in {
-      val userIdWhichNotExist = 40
-      val createChatRequest = CreateChatRequest(ChatType.groupChat, None, Seq(user2.id.get.value, user3.id.get.value, userIdWhichNotExist))
+      val userIdWhichNotExist = UserId(40)
+      val createChatRequest = CreateChatRequestDto(ChatType.groupChat, None, Seq(user2.id.get, user3.id.get, userIdWhichNotExist))
 
       val request = FakeRequest().withHeaders("accessToken" -> token1.token).withBody(Json.toJson(createChatRequest))
       val response = chatsController.createChat.apply(request)

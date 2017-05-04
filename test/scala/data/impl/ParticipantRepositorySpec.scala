@@ -1,9 +1,8 @@
 package scala.data.impl
 
+import pl.pgizka.gsenger.dtos.chats.CreateChatRequestDto
 
-import pl.pgizka.gsenger.controllers.chat.CreateChatRequest
-
-import scala.data.{BasicSpec, BasicSpecWithDefaultScenario}
+import scala.data.BasicSpecWithDefaultScenario
 
 class ParticipantRepositorySpec extends BasicSpecWithDefaultScenario {
   import scala.concurrent.ExecutionContext.Implicits.global
@@ -13,8 +12,8 @@ class ParticipantRepositorySpec extends BasicSpecWithDefaultScenario {
 
   "insertFromChatRequest" should {
     "create and insert all participants from charRequest" in {
-      val participantIds = Seq(user2.idValue, user3.idValue)
-      val createChatRequest = CreateChatRequest(chat1.chatType, chat1.name, participantIds)
+      val participantIds = Seq(user2.id.get, user3.id.get)
+      val createChatRequest = CreateChatRequestDto(chat1.chatType, chat1.name, participantIds)
 
       val result = db.run(participants.insertFromCreateChatRequest(createChatRequest, chat1, user1.id.get)).futureValue
 

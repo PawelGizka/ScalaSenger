@@ -1,6 +1,6 @@
 package pl.pgizka.gsenger.model
 
-import pl.pgizka.gsenger.controllers.user.UserFacebookLoginRequest
+import pl.pgizka.gsenger.dtos.users.UserFacebookLoginRequestDto
 
 case class DeviceId(value: Long) extends EntityId(value)
 
@@ -13,7 +13,7 @@ case class Device(
   gcmPushToken: String,
   ownerId: UserId) extends Entity[DeviceId] {
 
-  def this(owner: User, userFacebookLoginRequest: UserFacebookLoginRequest) =
+  def this(owner: User, userFacebookLoginRequest: UserFacebookLoginRequestDto) =
     this (
       None,
 
