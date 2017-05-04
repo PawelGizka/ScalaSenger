@@ -9,7 +9,7 @@ import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.services.facebook.FacebookService
 import pl.pgizka.gsenger.Error
-import pl.pgizka.gsenger.startup.Implicits.timeout
+import pl.pgizka.gsenger.startup.Implicits.akkAskTimeout
 
 import scala.concurrent.Future
 import akka.actor.{ActorNotFound, ActorRef, ActorSystem}

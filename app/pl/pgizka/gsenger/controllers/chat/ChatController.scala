@@ -6,7 +6,7 @@ import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
 import pl.pgizka.gsenger.Error
 import pl.pgizka.gsenger.model.Chat._
-import pl.pgizka.gsenger.startup.Implicits.timeout
+import pl.pgizka.gsenger.startup.Implicits.akkAskTimeout
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import pl.pgizka.gsenger.dtos.chats.{CreateChatRequestDto, GetAllChatsWithParticipantInfoDto}
