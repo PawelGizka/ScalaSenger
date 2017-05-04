@@ -30,7 +30,7 @@ class ChatsControllerSpec extends ControllerSpecWithDefaultScenario {
   var chatsController: ChatController = _
 
   before {
-    db.run(createDefaultScenarioAction).futureValue
+    db.run(createDefaultScenarioAction(this)).futureValue
 
     val initialData = await(InitialData.load(this))
 
@@ -38,10 +38,6 @@ class ChatsControllerSpec extends ControllerSpecWithDefaultScenario {
     userManager = system.actorOf(UserManagerActor.props(this, initialData, realFacebookService, chatManager), "userManager")
 
     chatsController = new ChatController(this, system, chatManager)
-  }
-
-  def await[T](awaitable: Awaitable[T]): T = {
-    Await.result(awaitable, Duration.Inf)
   }
 
   after {

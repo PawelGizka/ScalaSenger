@@ -30,7 +30,7 @@ class MessageControllerSpec extends ControllerSpecWithDefaultScenario {
   var messageController: MessageController = _
 
   before {
-    db.run(createDefaultScenarioAction).futureValue
+    db.run(createDefaultScenarioAction(this)).futureValue
 
     val initialData = await(InitialData.load(this))
 

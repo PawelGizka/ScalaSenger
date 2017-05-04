@@ -68,9 +68,7 @@ class ChatManagerActor(dataAccess: DAL with DatabaseSupport,
       db.run(users.find(createChatRequest.participants.map(new UserId(_)))).flatMap{foundUsers =>
         val allSpecifiedUsersExists = foundUsers.size == createChatRequest.participants.size
         if (allSpecifiedUsersExists) {
-          db.run(chats.insertFromRequest(createChatRequest, userId)).map{
-            case (chat: Chat, participants: Seq[Participant]) => ChatWithParticipants(chat, participants)
-          }
+          db.run(chats.insertFromRequest(createChatRequest, userId)).map(ChatWithParticipants.tupled(_))
         } else {
           val notFoundIds = getNotFoundElements(createChatRequest.participants, foundUsers.map(_.id.get.value))
           val errorMessage = formatSequenceMessage("Not found users ids: ", notFoundIds)

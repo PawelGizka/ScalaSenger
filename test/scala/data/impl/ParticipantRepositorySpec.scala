@@ -16,7 +16,7 @@ class ParticipantRepositorySpec extends BasicSpecWithDefaultScenario {
       val participantIds = Seq(user2.idValue, user3.idValue)
       val createChatRequest = CreateChatRequest(chat1.chatType, chat1.name, participantIds)
 
-      val result = db.run(participants.insertFromCreateChatRequest(createChatRequest, chat1, user1)).futureValue
+      val result = db.run(participants.insertFromCreateChatRequest(createChatRequest, chat1, user1.id.get)).futureValue
 
       result must have size 3
       result.foreach{ participant =>

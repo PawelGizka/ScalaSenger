@@ -30,7 +30,7 @@ class UserControllerSpec extends ControllerSpecWithDefaultScenario {
   var userManager: ActorRef = _
 
   before {
-    db.run(createDefaultScenarioAction).futureValue
+    db.run(createDefaultScenarioAction(this)).futureValue
 
     val initialData = await(InitialData.load(this))
 
