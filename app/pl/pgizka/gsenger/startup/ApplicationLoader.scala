@@ -23,7 +23,7 @@ class ApplicationModule(context: Context) extends BuiltInComponentsFromContext(c
   val initialData = Utils.await(InitialData.load(dataAccess))
 
   val chatManager = actorSystem.actorOf(ChatManagerActor.props(dataAccess, initialData), "chatManager")
-  val userManager = actorSystem.actorOf(UserManagerActor.props(dataAccess, initialData, realFacebookService, chatManager), "userManager")
+  val userManager = actorSystem.actorOf(UserManagerActor.props(dataAccess, initialData, realFacebookService), "userManager")
 
   lazy val assets = new controllers.Assets(httpErrorHandler)
 

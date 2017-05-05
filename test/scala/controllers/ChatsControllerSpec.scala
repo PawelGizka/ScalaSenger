@@ -29,7 +29,7 @@ class ChatsControllerSpec extends ControllerSpec {
 
   override def onBefore(initialData: InitialData): Unit = {
     chatManager = system.actorOf(ChatManagerActor.props(this, initialData), "chatManager")
-    userManager = system.actorOf(UserManagerActor.props(this, initialData, realFacebookService, chatManager), "userManager")
+    userManager = system.actorOf(UserManagerActor.props(this, initialData, realFacebookService), "userManager")
 
     chatsController = new ChatController(this, system, chatManager)
   }

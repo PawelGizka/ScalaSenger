@@ -17,8 +17,7 @@ object UserActor {
             dataAccess: DAL with DatabaseSupport,
             chatsWithParticipant: Seq[(Chat, Participant)],
             contacts: Seq[(User, Contact)],
-            facebookService: FacebookService,
-            chatManager: ActorRef): Props = Props(classOf[UserActor], user, dataAccess, chatsWithParticipant, contacts, facebookService, chatManager)
+            facebookService: FacebookService): Props = Props(classOf[UserActor], user, dataAccess, chatsWithParticipant, contacts, facebookService)
 
   def actorName(userId: UserId): String = s"user-$userId"
 
@@ -42,8 +41,7 @@ class UserActor (user: User,
                  dataAccess: DAL with DatabaseSupport,
                  chatsLoaded: Seq[(Chat, Participant)],
                  contactsLoaded: Seq[(User, Contact)],
-                 facebookService: FacebookService,
-                 chatManager: ActorRef) extends Actor with ActorLogging {
+                 facebookService: FacebookService) extends Actor with ActorLogging {
 
   import dataAccess.db
   import dataAccess.profile.api._
