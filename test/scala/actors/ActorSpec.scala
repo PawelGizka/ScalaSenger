@@ -1,20 +1,22 @@
 package scala.actors
 
+import pl.pgizka.gsenger.persistance.H2DBConnector
+import pl.pgizka.gsenger.persistance.impl.DAL
+import pl.pgizka.gsenger.startup.InitialData
+import pl.pgizka.gsenger.startup.DefaultScenario._
+
 import akka.actor.ActorSystem
+
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.time.{Minutes, Span}
-import pl.pgizka.gsenger.persistance.H2DBConnector
-import pl.pgizka.gsenger.persistance.impl.DAL
-import pl.pgizka.gsenger.startup.InitialData
 
 
 class ActorSpec extends WordSpec with MustMatchers with OptionValues with BeforeAndAfter with BeforeAndAfterAll with ScalaFutures with MockitoSugar
-  with H2DBConnector with DAL {
+with H2DBConnector with DAL {
 
   import profile.api._
-  import pl.pgizka.gsenger.startup.DefaultScenario._
 
   implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Minutes))
 
@@ -41,5 +43,6 @@ class ActorSpec extends WordSpec with MustMatchers with OptionValues with Before
   override protected def afterAll(): Unit = {
     system.registerOnTermination()
   }
+
 
 }

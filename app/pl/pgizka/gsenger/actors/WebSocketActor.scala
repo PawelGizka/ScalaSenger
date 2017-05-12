@@ -1,22 +1,23 @@
 package pl.pgizka.gsenger.actors
 
 import pl.pgizka.gsenger.model._
-import pl.pgizka.gsenger.Error
+import pl.pgizka.gsenger.{Error, errors}
 import pl.pgizka.gsenger.actors.WebSocketRequest._
 import pl.pgizka.gsenger.actors.WebSocketActor.{AddedToChat, NewMessage}
-import pl.pgizka.gsenger.errors.DatabaseError
 import pl.pgizka.gsenger.persistance.DatabaseSupport
 import pl.pgizka.gsenger.persistance.impl.DAL
-import play.api.libs.json.{JsValue, Json}
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import akka.pattern.{ask, pipe}
 import pl.pgizka.gsenger.actors.ActorsUtils.databaseError
 import pl.pgizka.gsenger.dtos.chats.{ChatDto, CreateChatRequestDto}
 import pl.pgizka.gsenger.dtos.messages.{CreateMessageRequestDto, MessageDto}
 import pl.pgizka.gsenger.dtos.users.{GetContactsRequestDto, GetContactsResponseDto}
+
+import play.api.libs.json.JsValue
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.Logger
 import play.api.libs.json.Json.toJson
+
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.pattern.{ask, pipe}
 
 object WebSocketActor {
 
@@ -82,8 +83,17 @@ class WebSocketActor (out: ActorRef,
       method match {
         case "createNewMessage" =>
           val createMessageRequest = content.as[CreateMessageRequestDto]
-          ChatActor.actorSelection(createMessageRequest.chatId)(context.system) forward
+
+          def tryInsertChat() = ChatActor.actorSelection(createMessageRequest.chatId)(context.system) !
             ChatActor.CreateNewMessage(userId, createMessageRequest, new RequestContext(request))
+
+          db.run(chats.find(createMessageRequest.chatId)).map{chatOption =>
+            if (chatOption.isDefined) {
+              tryInsertChat()
+            } else {
+              out ! toJson(new WebSocketErrorResponse(new RequestContext(request), errors.CouldNotFindChatError))
+            }
+          }
 
         case "createNewChat" =>
           chatManagerActor ! ChatManagerActor.CreateNewChat(content.as[CreateChatRequestDto], userId, new RequestContext(request))
