@@ -15,6 +15,7 @@ import pl.pgizka.gsenger.actors.ActorsUtils.databaseError
 import pl.pgizka.gsenger.dtos.chats.{ChatDto, CreateChatRequestDto}
 import pl.pgizka.gsenger.dtos.messages.{CreateMessageRequestDto, MessageDto}
 import pl.pgizka.gsenger.dtos.users.{GetContactsRequestDto, GetContactsResponseDto}
+import play.api.libs.json.Json.toJson
 
 object WebSocketActor {
 
@@ -51,22 +52,22 @@ class WebSocketActor (out: ActorRef,
   override def receive: Receive = {
 
     case NewMessage(message) =>
-      out ! WebSocketPush("newMessage", Json.toJson(new MessageDto(message)))
+      out ! toJson(WebSocketPush("newMessage", toJson(new MessageDto(message))))
 
     case AddedToChat(chat, participants) =>
-      out ! WebSocketPush("addedToChat", Json.toJson(new ChatDto(chat, participants)))
+      out ! toJson(WebSocketPush("addedToChat", toJson(new ChatDto(chat, participants))))
 
     case ActorErrorResponse(error: Error, requestContext) =>
-      out ! new WebSocketErrorResponse(requestContext, error)
+      out ! toJson(new WebSocketErrorResponse(requestContext, error))
 
     case ChatActor.CreateNewMessageResponse(message, requestContext)=>
-      out ! new WebSocketResponse(requestContext, Json.toJson(new MessageDto(message)))
+      out ! toJson(new WebSocketResponse(requestContext, toJson(new MessageDto(message))))
 
     case ChatManagerActor.CreateNewChatResponse(chat, participants, requestContext) =>
-      out ! new WebSocketResponse(requestContext, Json.toJson(new ChatDto(chat, participants)))
+      out ! toJson(new WebSocketResponse(requestContext, toJson(new ChatDto(chat, participants))))
 
     case UserActor.GetContactsResponse(contactsDtos, requestContext) =>
-      out ! new WebSocketResponse(requestContext, Json.toJson(new GetContactsResponseDto(contactsDtos)))
+      out ! toJson(new WebSocketResponse(requestContext, toJson(new GetContactsResponseDto(contactsDtos))))
 
     case js: JsValue =>
       val request = js.as[WebSocketRequest]
@@ -88,7 +89,7 @@ class WebSocketActor (out: ActorRef,
 
         case "listChats" =>
           db.run(chats.findAllChatsWithParticipants(userId)).map{chatsInfos =>
-            WebSocketResponse(Some(method), id, Json.toJson(chatsInfos))
+            toJson(WebSocketResponse(Some(method), id, toJson(chatsInfos)))
           } recover databaseError(request) pipeTo out
       }
 
