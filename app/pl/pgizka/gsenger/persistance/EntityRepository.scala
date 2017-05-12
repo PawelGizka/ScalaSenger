@@ -57,7 +57,7 @@ trait EntityRepository { this: Profile =>
     def insert(e: Seq[E]): DBIO[Seq[E]] = {
 
       (tableQuery returning tableQuery.map(_.id) into {
-        case(t, id) => t
+        case(t, id) => copyEntityFields(t, Some(id))
       }) ++= e
     }
 

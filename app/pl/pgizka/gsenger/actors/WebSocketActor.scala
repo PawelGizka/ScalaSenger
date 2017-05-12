@@ -15,6 +15,7 @@ import pl.pgizka.gsenger.actors.ActorsUtils.databaseError
 import pl.pgizka.gsenger.dtos.chats.{ChatDto, CreateChatRequestDto}
 import pl.pgizka.gsenger.dtos.messages.{CreateMessageRequestDto, MessageDto}
 import pl.pgizka.gsenger.dtos.users.{GetContactsRequestDto, GetContactsResponseDto}
+import play.api.Logger
 import play.api.libs.json.Json.toJson
 
 object WebSocketActor {
@@ -22,9 +23,10 @@ object WebSocketActor {
   def props(out: ActorRef,
             userId: UserId,
             userActor: ActorRef,
+            chatManagerActor: ActorRef,
             dataAccess: DAL with DatabaseSupport) =
 
-    Props(classOf[WebSocketActor], out, userId, userActor, dataAccess)
+    Props(classOf[WebSocketActor], out, userId, userActor, chatManagerActor, dataAccess)
 
   case class NewMessage(message: Message)
   case class AddedToChat(chat: Chat, participants: Seq[Participant])
@@ -38,6 +40,8 @@ class WebSocketActor (out: ActorRef,
 
   import dataAccess._
   import profile.api._
+
+  val logger: Logger = Logger("webSocketActorLogger userId: " + userId)
 
   @scala.throws[Exception](classOf[Exception])
   override def preStart(): Unit = {
@@ -71,7 +75,7 @@ class WebSocketActor (out: ActorRef,
 
     case js: JsValue =>
       val request = js.as[WebSocketRequest]
-      val method = request.method
+      val method: String = request.method
       val id = request.id
       val content = request.content
 
@@ -91,8 +95,11 @@ class WebSocketActor (out: ActorRef,
           db.run(chats.findAllChatsWithParticipants(userId)).map{chatsInfos =>
             toJson(WebSocketResponse(Some(method), id, toJson(chatsInfos)))
           } recover databaseError(request) pipeTo out
+
+        case other => logger.warn("Unknown method in webSocketRequest received: " + other.toString)
       }
 
+    case other => logger.warn("Unknown message received: " + other.toString)
   }
 
 }

@@ -22,6 +22,7 @@ class ActorSpec extends WordSpec with MustMatchers with OptionValues with Before
 
   before {
     db.run(createDefaultScenarioAction(this)).futureValue
+
     val initialData = InitialData.load(this).futureValue
 
     onBefore(initialData)
