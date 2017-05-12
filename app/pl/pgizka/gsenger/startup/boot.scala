@@ -10,22 +10,9 @@ object boot {
 
   def initiateDataAccess(dataAccess: DAL with DatabaseSupport): Unit = {
     import dataAccess._
-    import profile.api._
-
-    await(db.run(create()))
-
     import DefaultScenario._
 
-    val createDefaultScenarioAction = DBIO.seq(
-      users ++= userTestData,
-      devices ++= deviceTestData,
-      contacts ++= contactTestData,
-      chats ++= chatTestData,
-      participants ++= participantTestData,
-      messages ++= messageTestData
-    )
-
-    await(db.run(createDefaultScenarioAction))
+    await(db.run(createDefaultScenarioAction(dataAccess)))
   }
 }
 

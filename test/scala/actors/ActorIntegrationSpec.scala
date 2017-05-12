@@ -12,7 +12,6 @@ import pl.pgizka.gsenger.startup.Implicits.akkAskTimeout
 
 import scala.concurrent.duration.FiniteDuration
 
-
 class ActorIntegrationSpec extends ActorSpec with TestKitBase {
 
   var chatManager: ActorRef = _
